@@ -39,7 +39,7 @@ export function PersonalInfoEditor({ personalInfo, onChange }: PersonalInfoEdito
             className="mt-1"
           />
         </div>
-        
+
         <div>
           <Label htmlFor="lastName" className="text-sm font-medium">
             Last Name *

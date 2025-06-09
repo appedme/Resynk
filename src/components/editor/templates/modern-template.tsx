@@ -121,8 +121,9 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
   };
 
   return (
-    <div 
+    <div
       className="max-w-none mx-auto bg-white shadow-lg"
+      data-testid="resume-template"
       style={{
         fontFamily: settings.fontFamily,
         fontSize: `${settings.fontSize}px`,
@@ -132,14 +133,14 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
       <div className={`${getMargins()} ${getSpacing()}`}>
         {/* Header Section */}
         <div className="text-center border-b pb-6">
-          <h1 
+          <h1
             className="text-3xl font-bold mb-2"
             style={{ color: settings.primaryColor }}
           >
             {personalInfo.firstName} {personalInfo.lastName}
           </h1>
-          
-          <div 
+
+          <div
             className="flex flex-wrap justify-center gap-4 text-sm"
             style={{ color: settings.secondaryColor }}
           >
@@ -163,7 +164,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
             )}
           </div>
 
-          <div 
+          <div
             className="flex flex-wrap justify-center gap-4 text-sm mt-2"
             style={{ color: settings.secondaryColor }}
           >
@@ -182,7 +183,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
           </div>
 
           {personalInfo.summary && (
-            <p 
+            <p
               className="mt-4 max-w-2xl mx-auto leading-relaxed"
               style={{ color: settings.secondaryColor }}
             >
@@ -194,7 +195,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         {/* Experience Section */}
         {experience.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 pb-2 border-b"
               style={{ color: settings.primaryColor }}
             >
@@ -229,7 +230,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         {/* Education Section */}
         {education.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 pb-2 border-b"
               style={{ color: resume.settings.primaryColor }}
             >
@@ -256,7 +257,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         {/* Skills Section */}
         {skills.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 pb-2 border-b"
               style={{ color: resume.settings.primaryColor }}
             >
@@ -283,7 +284,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         {/* Projects Section */}
         {projects.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 pb-2 border-b"
               style={{ color: resume.settings.primaryColor }}
             >
@@ -331,7 +332,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         {/* Certifications Section */}
         {certifications.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 pb-2 border-b"
               style={{ color: resume.settings.primaryColor }}
             >
@@ -357,7 +358,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         {/* Languages Section */}
         {languages.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 pb-2 border-b"
               style={{ color: resume.settings.primaryColor }}
             >
@@ -377,7 +378,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         {/* Awards Section */}
         {awards.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 pb-2 border-b"
               style={{ color: resume.settings.primaryColor }}
             >
@@ -403,12 +404,12 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
         )}
 
         {/* Custom Sections */}
-        {customSections && customSections.length > 0 && 
+        {customSections && customSections.length > 0 &&
           customSections
             .sort((a, b) => a.order - b.order)
             .map((section) => (
               <div key={section.id}>
-                <h2 
+                <h2
                   className="text-xl font-bold mb-4 pb-2 border-b"
                   style={{ color: resume.settings.primaryColor }}
                 >
@@ -430,8 +431,8 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
                             return (
                               <tr key={lineIndex} className={lineIndex === 0 ? 'font-semibold border-b border-gray-300' : ''}>
                                 {cells.map((cell, cellIndex) => (
-                                  <td 
-                                    key={cellIndex} 
+                                  <td
+                                    key={cellIndex}
                                     className={`py-2 pr-4 ${lineIndex === 0 ? 'text-gray-800' : 'text-gray-700'}`}
                                   >
                                     {cell}

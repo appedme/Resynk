@@ -1,12 +1,12 @@
 "use client";
 
-import { 
-  Undo, 
-  Redo, 
-  ZoomIn, 
-  ZoomOut, 
-  Monitor, 
-  Smartphone, 
+import {
+  Undo,
+  Redo,
+  ZoomIn,
+  ZoomOut,
+  Monitor,
+  Smartphone,
   Maximize,
   Type,
   Palette,
@@ -214,7 +214,7 @@ export function EditorToolbar({
                   <PopoverContent className="w-80">
                     <div className="space-y-4">
                       <h4 className="font-medium">Typography Settings</h4>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="font-family">Font Family</Label>
                         <Select value={fontFamily} onValueChange={onFontFamilyChange}>
@@ -263,16 +263,15 @@ export function EditorToolbar({
                   <PopoverContent className="w-80">
                     <div className="space-y-4">
                       <h4 className="font-medium">Color Theme</h4>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="primary-color">Primary Color</Label>
                         <div className="flex gap-2">
                           {['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'].map((color) => (
                             <button
                               key={color}
-                              className={`w-8 h-8 rounded-full border-2 ${
-                                primaryColor === color ? 'border-gray-800' : 'border-gray-300'
-                              }`}
+                              className={`w-8 h-8 rounded-full border-2 ${primaryColor === color ? 'border-gray-800' : 'border-gray-300'
+                                }`}
                               style={{ backgroundColor: color }}
                               onClick={() => onPrimaryColorChange(color)}
                             />
@@ -286,9 +285,8 @@ export function EditorToolbar({
                           {['#6B7280', '#374151', '#1F2937', '#111827', '#4B5563', '#9CA3AF'].map((color) => (
                             <button
                               key={color}
-                              className={`w-8 h-8 rounded-full border-2 ${
-                                secondaryColor === color ? 'border-gray-800' : 'border-gray-300'
-                              }`}
+                              className={`w-8 h-8 rounded-full border-2 ${secondaryColor === color ? 'border-gray-800' : 'border-gray-300'
+                                }`}
                               style={{ backgroundColor: color }}
                               onClick={() => onSecondaryColorChange(color)}
                             />
@@ -315,7 +313,7 @@ export function EditorToolbar({
                   <PopoverContent className="w-80">
                     <div className="space-y-4">
                       <h4 className="font-medium">Layout Settings</h4>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="spacing">Section Spacing</Label>
                         <Select value={spacing} onValueChange={onSpacingChange}>

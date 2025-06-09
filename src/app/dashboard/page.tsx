@@ -97,7 +97,7 @@ export default function Dashboard() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg ATS Score</CardTitle>
@@ -110,7 +110,7 @@ export default function Dashboard() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Views</CardTitle>
@@ -123,7 +123,7 @@ export default function Dashboard() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Resumes</CardTitle>
@@ -176,7 +176,7 @@ export default function Dashboard() {
                 <div className="bg-white dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg h-48 mb-4 flex items-center justify-center">
                   <FileText className="w-12 h-12 text-gray-400" />
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Badge variant={resume.status === "published" ? "default" : "secondary"}>
@@ -186,13 +186,13 @@ export default function Dashboard() {
                       {resume.lastModified}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600 dark:text-gray-300">
                         ATS Score:
                       </span>
-                      <Badge 
+                      <Badge
                         variant={resume.atsScore >= 80 ? "default" : "secondary"}
                         className={resume.atsScore >= 80 ? "bg-green-100 text-green-800" : ""}
                       >
@@ -203,7 +203,7 @@ export default function Dashboard() {
                       {resume.views} views
                     </span>
                   </div>
-                  
+
                   <div className="flex gap-2 pt-2">
                     <Link href={`/editor/${resume.id}`} className="flex-1">
                       <Button variant="outline" className="w-full">

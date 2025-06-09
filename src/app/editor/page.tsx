@@ -123,7 +123,7 @@ export default function EditorPage({ params }: EditorPageProps) {
   const [isFullPreview, setIsFullPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  
+
   // Undo/Redo history system
   const [history, setHistory] = useState<Resume[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);

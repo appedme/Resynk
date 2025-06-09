@@ -119,9 +119,10 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
   };
 
   return (
-    <div 
+    <div
       className={getMargins()}
-      style={{ 
+      data-testid="resume-template"
+      style={{
         fontFamily: settings.fontFamily,
         fontSize: `${settings.fontSize}px`,
         lineHeight: settings.spacing === 'compact' ? '1.4' : settings.spacing === 'relaxed' ? '1.8' : '1.6'
@@ -131,7 +132,7 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
       <div className={getSpacing()}>
         {/* Header Section */}
         <div className="text-center border-b-2 pb-6" style={{ borderColor: settings.primaryColor }}>
-          <h1 
+          <h1
             className="text-3xl font-bold mb-2"
             style={{ color: settings.primaryColor }}
           >
@@ -160,11 +161,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Professional Summary */}
         {personalInfo.summary && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-3 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Professional Summary
@@ -176,11 +177,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Experience Section */}
         {experience.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Professional Experience
@@ -220,11 +221,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Education Section */}
         {education.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Education
@@ -250,11 +251,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Skills Section */}
         {skills.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Core Competencies
@@ -277,11 +278,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Projects Section */}
         {projects.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Key Projects
@@ -318,11 +319,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Certifications Section */}
         {certifications.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Certifications
@@ -347,11 +348,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Languages Section */}
         {languages.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Languages
@@ -370,11 +371,11 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         {/* Awards Section */}
         {awards.length > 0 && (
           <div>
-            <h2 
+            <h2
               className="text-xl font-bold mb-4 border-l-4 pl-3"
-              style={{ 
+              style={{
                 color: settings.primaryColor,
-                borderColor: settings.primaryColor 
+                borderColor: settings.primaryColor
               }}
             >
               Awards & Recognition
@@ -399,16 +400,16 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         )}
 
         {/* Custom Sections */}
-        {customSections && customSections.length > 0 && 
+        {customSections && customSections.length > 0 &&
           customSections
             .sort((a, b) => a.order - b.order)
             .map((section) => (
               <div key={section.id}>
-                <h2 
+                <h2
                   className="text-xl font-bold mb-4 border-l-4 pl-3"
-                  style={{ 
+                  style={{
                     color: settings.primaryColor,
-                    borderColor: settings.primaryColor 
+                    borderColor: settings.primaryColor
                   }}
                 >
                   {section.title}
@@ -429,8 +430,8 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
                             return (
                               <tr key={lineIndex} className={lineIndex === 0 ? 'font-bold border-b-2' : 'border-b'} style={{ borderColor: lineIndex === 0 ? settings.primaryColor : '#e5e7eb' }}>
                                 {cells.map((cell, cellIndex) => (
-                                  <td 
-                                    key={cellIndex} 
+                                  <td
+                                    key={cellIndex}
                                     className={`py-2 pr-6 ${lineIndex === 0 ? 'text-gray-800' : 'text-gray-700'}`}
                                   >
                                     {cell}

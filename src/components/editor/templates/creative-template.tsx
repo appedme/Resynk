@@ -119,9 +119,10 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
   };
 
   return (
-    <div 
+    <div
       className={`${getMargins()} bg-gradient-to-br from-gray-50 to-white`}
-      style={{ 
+      data-testid="resume-template"
+      style={{
         fontFamily: settings.fontFamily,
         fontSize: `${settings.fontSize}px`,
         lineHeight: settings.spacing === 'compact' ? '1.4' : settings.spacing === 'relaxed' ? '1.8' : '1.6'
@@ -131,9 +132,9 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
       <div className={getSpacing()}>
         {/* Header Section */}
         <div className="text-center mb-8 bg-white rounded-2xl p-8 shadow-lg border-t-4" style={{ borderColor: settings.primaryColor }}>
-          <h1 
+          <h1
             className="text-4xl font-bold mb-3 bg-gradient-to-r bg-clip-text text-transparent"
-            style={{ 
+            style={{
               backgroundImage: `linear-gradient(135deg, ${settings.primaryColor}, ${settings.secondaryColor || settings.primaryColor})`
             }}
           >
@@ -159,7 +160,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Professional Summary */}
         {personalInfo.summary && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-4 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -172,7 +173,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Experience Section */}
         {experience.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -189,7 +190,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
                         <p className="font-semibold text-lg text-gray-800">{exp.company}</p>
                       </div>
                       <div className="text-right text-sm">
-                        <span 
+                        <span
                           className="px-3 py-1 rounded-full text-white font-medium"
                           style={{ backgroundColor: settings.secondaryColor || settings.primaryColor }}
                         >
@@ -213,7 +214,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
                     {exp.technologies.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {exp.technologies.map((tech, techIndex) => (
-                          <span 
+                          <span
                             key={techIndex}
                             className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 border"
                             style={{ borderColor: settings.primaryColor }}
@@ -233,7 +234,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Skills Section */}
         {skills.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -241,8 +242,8 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {skills.map((skill, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="p-3 rounded-lg border-2 text-center hover:shadow-md transition-shadow"
                   style={{ borderColor: settings.primaryColor + '30', backgroundColor: settings.primaryColor + '05' }}
                 >
@@ -261,7 +262,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Education Section */}
         {education.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -288,7 +289,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Projects Section */}
         {projects.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -314,7 +315,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
                   {project.technologies.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {project.technologies.map((tech, techIndex) => (
-                        <span 
+                        <span
                           key={techIndex}
                           className="px-2 py-1 text-xs rounded-full text-white"
                           style={{ backgroundColor: settings.secondaryColor || settings.primaryColor }}
@@ -333,7 +334,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Other sections with similar creative styling */}
         {certifications.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -359,7 +360,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Languages Section */}
         {languages.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -379,7 +380,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         {/* Awards Section */}
         {awards.length > 0 && (
           <div className="bg-white rounded-xl p-6 shadow-md">
-            <h2 
+            <h2
               className="text-2xl font-bold mb-6 flex items-center gap-2"
               style={{ color: settings.primaryColor }}
             >
@@ -405,12 +406,12 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         )}
 
         {/* Custom Sections */}
-        {customSections && customSections.length > 0 && 
+        {customSections && customSections.length > 0 &&
           customSections
             .sort((a, b) => a.order - b.order)
             .map((section) => (
               <div key={section.id} className="bg-white rounded-xl p-6 shadow-md">
-                <h2 
+                <h2
                   className="text-2xl font-bold mb-6 flex items-center gap-2"
                   style={{ color: settings.primaryColor }}
                 >
@@ -435,8 +436,8 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
                             return (
                               <tr key={lineIndex} className={lineIndex === 0 ? 'font-bold' : ''}>
                                 {cells.map((cell, cellIndex) => (
-                                  <td 
-                                    key={cellIndex} 
+                                  <td
+                                    key={cellIndex}
                                     className={`py-2 pr-6 ${lineIndex === 0 ? 'text-gray-800 border-b-2' : 'text-gray-700'}`}
                                     style={{ borderColor: lineIndex === 0 ? settings.primaryColor : 'transparent' }}
                                   >

@@ -8,16 +8,16 @@ interface ResumeStore {
   currentResume: Resume | null;
   resumeData: ResumeData | null;
   resumeSettings: ResumeSettings | null;
-  
+
   // Editor state
   editorState: EditorState;
-  
+
   // UI state
   sidebarCollapsed: boolean;
   previewMode: 'desktop' | 'mobile';
   showPreview: boolean;
   zoomLevel: number;
-  
+
   // Actions
   setCurrentResume: (resume: Resume) => void;
   updateResumeData: (data: Partial<ResumeData>) => void;
@@ -256,12 +256,12 @@ export const useUIStore = create<UIStore>()(
       setTheme: (theme) => set({ theme }),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
-      
+
       addNotification: (notification) => {
         const notifications = get().notifications;
         set({ notifications: [...notifications, { ...notification, id: Date.now().toString() }] });
       },
-      
+
       removeNotification: (id) => {
         const notifications = get().notifications.filter(n => n.id !== id);
         set({ notifications });

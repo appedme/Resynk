@@ -46,7 +46,7 @@ export function ExperienceEditor({ experiences, onChange }: ExperienceEditorProp
     const updatedExperiences = experiences.map((exp) =>
       exp.id === id ? { ...exp, [field]: value } : exp
     );
-    
+
     onChange(updatedExperiences);
   };
 
@@ -95,7 +95,7 @@ export function ExperienceEditor({ experiences, onChange }: ExperienceEditorProp
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-3">
                 <div>
                   <Label htmlFor={`position-${exp.id}`} className="text-sm font-medium">
@@ -149,7 +149,7 @@ export function ExperienceEditor({ experiences, onChange }: ExperienceEditorProp
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor={`endDate-${exp.id}`} className="text-sm font-medium">
                       End Date

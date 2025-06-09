@@ -43,7 +43,7 @@ export function EducationEditor({ education, onChange }: EducationEditorProps) {
     const updatedEducation = education.map((edu) =>
       edu.id === id ? { ...edu, [field]: value } : edu
     );
-    
+
     onChange(updatedEducation);
   };
 
@@ -92,7 +92,7 @@ export function EducationEditor({ education, onChange }: EducationEditorProps) {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-3">
                 <div>
                   <Label htmlFor={`degree-${edu.id}`} className="text-sm font-medium">
@@ -146,7 +146,7 @@ export function EducationEditor({ education, onChange }: EducationEditorProps) {
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor={`endDate-${edu.id}`} className="text-sm font-medium">
                       End Date

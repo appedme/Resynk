@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  User, 
-  Briefcase, 
-  GraduationCap, 
-  Code, 
-  FolderOpen, 
-  Award, 
+import {
+  User,
+  Briefcase,
+  GraduationCap,
+  Code,
+  FolderOpen,
+  Award,
   Languages,
   Plus,
   ChevronDown,
@@ -145,7 +145,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
     new Set(["personal", "experience", "education", "skills"])
   );
   const [sectionOrder, setSectionOrder] = useState<string[]>([
-    "personal", "experience", "education", "skills", "projects", 
+    "personal", "experience", "education", "skills", "projects",
     "certifications", "languages", "awards", ...resume.customSections.map(s => s.id)
   ]);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -236,7 +236,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "personal",
       title: "Personal Information",
       icon: <User className="w-4 h-4" />,
-      component: <PersonalInfoEditor 
+      component: <PersonalInfoEditor
         personalInfo={resume.personalInfo}
         onChange={handlePersonalInfoChange}
       />,
@@ -246,7 +246,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "experience",
       title: "Work Experience",
       icon: <Briefcase className="w-4 h-4" />,
-      component: <ExperienceEditor 
+      component: <ExperienceEditor
         experiences={resume.experience}
         onChange={handleExperienceChange}
       />,
@@ -256,7 +256,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "education",
       title: "Education",
       icon: <GraduationCap className="w-4 h-4" />,
-      component: <EducationEditor 
+      component: <EducationEditor
         education={resume.education}
         onChange={handleEducationChange}
       />,
@@ -266,7 +266,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "skills",
       title: "Skills",
       icon: <Code className="w-4 h-4" />,
-      component: <SkillsEditor 
+      component: <SkillsEditor
         skills={resume.skills}
         onChange={handleSkillsChange}
       />,
@@ -275,7 +275,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "projects",
       title: "Projects",
       icon: <FolderOpen className="w-4 h-4" />,
-      component: <ProjectsEditor 
+      component: <ProjectsEditor
         projects={resume.projects}
         onChange={handleProjectsChange}
       />,
@@ -284,7 +284,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "certifications",
       title: "Certifications",
       icon: <Award className="w-4 h-4" />,
-      component: <CertificationsEditor 
+      component: <CertificationsEditor
         certifications={resume.certifications}
         onChange={handleCertificationsChange}
       />,
@@ -293,7 +293,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "languages",
       title: "Languages",
       icon: <Languages className="w-4 h-4" />,
-      component: <LanguagesEditor 
+      component: <LanguagesEditor
         languages={resume.languages}
         onChange={handleLanguagesChange}
       />,
@@ -302,7 +302,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
       id: "awards",
       title: "Awards & Achievements",
       icon: <Award className="w-4 h-4" />,
-      component: <AwardsEditor 
+      component: <AwardsEditor
         awards={resume.awards}
         onChange={handleAwardsChange}
       />,
@@ -331,7 +331,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
-        
+
         <div className="space-y-3">
           <div>
             <Label htmlFor={`title-${customSection.id}`} className="text-sm font-medium">
@@ -341,7 +341,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
               id={`title-${customSection.id}`}
               value={customSection.title}
               onChange={(e) => {
-                const updatedSections = resume.customSections.map(s => 
+                const updatedSections = resume.customSections.map(s =>
                   s.id === customSection.id ? { ...s, title: e.target.value } : s
                 );
                 handleCustomSectionChange(updatedSections);
@@ -358,7 +358,7 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
             <Select
               value={customSection.type}
               onValueChange={(value: 'text' | 'list' | 'table') => {
-                const updatedSections = resume.customSections.map(s => 
+                const updatedSections = resume.customSections.map(s =>
                   s.id === customSection.id ? { ...s, type: value } : s
                 );
                 handleCustomSectionChange(updatedSections);
@@ -383,16 +383,16 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
               id={`content-${customSection.id}`}
               value={customSection.content}
               onChange={(e) => {
-                const updatedSections = resume.customSections.map(s => 
+                const updatedSections = resume.customSections.map(s =>
                   s.id === customSection.id ? { ...s, content: e.target.value } : s
                 );
                 handleCustomSectionChange(updatedSections);
               }}
-              placeholder={customSection.type === 'list' 
+              placeholder={customSection.type === 'list'
                 ? "• Item 1\n• Item 2\n• Item 3"
-                : customSection.type === 'table' 
-                ? "Header 1 | Header 2\nRow 1 Col 1 | Row 1 Col 2"
-                : "Enter your content here..."
+                : customSection.type === 'table'
+                  ? "Header 1 | Header 2\nRow 1 Col 1 | Row 1 Col 2"
+                  : "Enter your content here..."
               }
               rows={6}
               className="mt-1"
