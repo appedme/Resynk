@@ -9,7 +9,21 @@ interface ModernTemplateProps {
 }
 
 export function ModernTemplate({ resume }: ModernTemplateProps) {
-  const { personal, experience, education, skills, projects, certifications, languages, custom_sections } = resume;
+  // Add null checks and fallbacks
+  if (!resume) {
+    return <div className="p-8">Loading...</div>;
+  }
+
+  const {
+    personal = {},
+    experience = [],
+    education = [],
+    skills = [],
+    projects = [],
+    certifications = [],
+    languages = [],
+    custom_sections = []
+  } = resume;
 
   // Default styling since settings are not part of ResumeData
   const primaryColor = '#2563eb'; // blue-600
@@ -22,14 +36,16 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
       {/* Header Section */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {personal.full_name}
+          {personal.full_name || 'Your Name'}
         </h1>
-        
+
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mb-4">
-          <div className="flex items-center gap-1">
-            <Mail className="w-4 h-4" style={{ color: primaryColor }} />
-            <span>{personal.email}</span>
-          </div>
+          {personal.email && (
+            <div className="flex items-center gap-1">
+              <Mail className="w-4 h-4" style={{ color: primaryColor }} />
+              <span>{personal.email}</span>
+            </div>
+          )}
           {personal.phone && (
             <div className="flex items-center gap-1">
               <Phone className="w-4 h-4" style={{ color: primaryColor }} />

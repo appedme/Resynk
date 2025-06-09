@@ -8,11 +8,23 @@ interface ProfessionalTemplateProps {
 }
 
 export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
-  const { personal, experience, education, skills, projects, certifications, languages, custom_sections } = resume;
+  // Add null checks and fallbacks
+  if (!resume) {
+    return <div className="p-8">Loading...</div>;
+  }
+
+  const {
+    personal = {},
+    experience = [],
+    education = [],
+    skills = [],
+    projects = [],
+    certifications = [],
+    languages = [],
+    custom_sections = []
+  } = resume;
 
   // Default styling since settings are not part of ResumeData
-  const primaryColor = '#1f2937'; // gray-800
-  const secondaryColor = '#374151'; // gray-700
   const spacing = 'space-y-6';
   const margins = 'p-8';
 
@@ -26,9 +38,9 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
       {/* Header Section */}
       <div className="border-b-2 border-gray-300 pb-6 mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
-          {personal.full_name}
+          {personal.full_name || 'Your Name'}
         </h1>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
           <div>Email: {personal.email}</div>
           {personal.phone && <div>Phone: {personal.phone}</div>}

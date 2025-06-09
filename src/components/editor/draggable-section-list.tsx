@@ -63,11 +63,10 @@ function SortableSectionItem({
     return (
         <div ref={setNodeRef} style={style} className={`${isDragging ? 'z-50' : ''}`}>
             <div
-                className={`w-full flex items-center justify-between h-10 pl-2 pr-2 rounded-md cursor-pointer border ${
-                    isActive 
-                        ? "bg-primary text-primary-foreground border-primary" 
+                className={`w-full flex items-center justify-between h-10 pl-2 pr-2 rounded-md cursor-pointer border ${isActive
+                        ? "bg-primary text-primary-foreground border-primary"
                         : "bg-transparent hover:bg-accent hover:text-accent-foreground border-border"
-                }`}
+                    }`}
                 onClick={() => {
                     onSelect(section.id);
                     if (!isExpanded) {

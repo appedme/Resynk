@@ -140,15 +140,15 @@ export function FeaturesSection() {
                                     <div
                                         key={index}
                                         className={`cursor-pointer transition-all duration-500 ${activeFeature === index
-                                                ? 'bg-white dark:bg-gray-800 shadow-xl border-l-4 border-blue-500'
-                                                : 'bg-transparent hover:bg-white/50 dark:hover:bg-gray-800/50'
+                                            ? 'bg-white dark:bg-gray-800 shadow-xl border-l-4 border-blue-500'
+                                            : 'bg-transparent hover:bg-white/50 dark:hover:bg-gray-800/50'
                                             } p-6 rounded-xl`}
                                         onClick={() => setActiveFeature(index)}
                                     >
                                         <div className="flex items-start gap-4">
                                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${activeFeature === index
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
                                                 }`}>
                                                 <feature.icon className="w-6 h-6" />
                                             </div>

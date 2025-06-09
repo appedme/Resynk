@@ -8,7 +8,21 @@ interface CreativeTemplateProps {
 }
 
 export function CreativeTemplate({ resume }: CreativeTemplateProps) {
-  const { personal, experience, education, skills, projects, certifications, languages, custom_sections } = resume;
+  // Add null checks and fallbacks
+  if (!resume) {
+    return <div className="p-8">Loading...</div>;
+  }
+
+  const {
+    personal = {},
+    experience = [],
+    education = [],
+    skills = [],
+    projects = [],
+    certifications = [],
+    languages = [],
+    custom_sections = []
+  } = resume;
 
   // Default styling since settings are not part of ResumeData
   const primaryColor = '#7c3aed'; // violet-600
@@ -27,9 +41,9 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 mb-8">
         <div className="relative z-10">
           <h1 className="text-4xl font-bold mb-3">
-            {personal.full_name}
+            {personal.full_name || 'Your Name'}
           </h1>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-purple-100 mb-4">
             <div>📧 {personal.email}</div>
             {personal.phone && <div>📱 {personal.phone}</div>}
@@ -46,7 +60,7 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
             </div>
           )}
         </div>
-        
+
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>

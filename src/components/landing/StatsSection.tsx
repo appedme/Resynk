@@ -38,7 +38,7 @@ export function StatsSection() {
                 interviews: 75000,
                 success: 94
             };
-            
+
             const duration = 2000; // 2 seconds
             const steps = 60;
             const stepDuration = duration / steps;

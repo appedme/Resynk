@@ -156,8 +156,8 @@ export function PricingSection() {
                             )}
 
                             <div className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 p-8 border-2 ${plan.popular
-                                    ? 'border-blue-500 dark:border-blue-400'
-                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                ? 'border-blue-500 dark:border-blue-400'
+                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                 } h-full flex flex-col`}>
                                 {/* Plan Header */}
                                 <div className="text-center mb-8">
@@ -231,8 +231,8 @@ export function PricingSection() {
                                 {/* CTA Button */}
                                 <button
                                     className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${plan.popular
-                                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                                         }`}
                                 >
                                     {plan.cta}

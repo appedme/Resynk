@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Save,
+  Download,
   Share2,
   Settings
 } from "lucide-react";
@@ -15,7 +16,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResumeEditorSidebar } from "@/components/editor/resume-editor-sidebar";
 import { ResumePreview } from "@/components/editor/resume-preview";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
-import { ExportOptions } from "@/components/editor/export-options";
 
 // Editor-specific Resume interface for simpler usage
 interface Resume {
@@ -89,8 +89,6 @@ interface Resume {
     id: string;
     title: string;
     content: string;
-    type: 'text' | 'list' | 'table';
-    order: number;
   }>;
   settings: {
     fontSize: number;
@@ -123,20 +121,6 @@ export default function EditorPage({ params }: EditorPageProps) {
   const [isFullPreview, setIsFullPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-
-  // Undo/Redo history system
-  const [history, setHistory] = useState<Resume[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-
-  // Add to history when resume changes
-  const addToHistory = (resume: Resume) => {
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push({ ...resume });
-      return newHistory.slice(-50); // Keep only last 50 changes
-    });
-    setHistoryIndex(prev => Math.min(prev + 1, 49));
-  };
 
   // Initialize or load resume
   useEffect(() => {
@@ -213,25 +197,7 @@ export default function EditorPage({ params }: EditorPageProps) {
   };
 
   const handleResumeChange = (updatedResume: Resume) => {
-    if (currentResume) {
-      addToHistory(currentResume); // Add current state to history before changing
-    }
     setCurrentResume(updatedResume);
-  };
-
-  const handleTemplateChange = (template: 'modern' | 'professional' | 'creative') => {
-    if (currentResume) {
-      const updatedResume = {
-        ...currentResume,
-        template,
-        metadata: {
-          ...currentResume.metadata,
-          lastModified: new Date(),
-          version: currentResume.metadata.version + 1,
-        },
-      };
-      handleResumeChange(updatedResume);
-    }
   };
 
   const handleZoomIn = () => {
@@ -240,125 +206,6 @@ export default function EditorPage({ params }: EditorPageProps) {
 
   const handleZoomOut = () => {
     setZoom(prev => Math.max(prev - 10, 50));
-  };
-
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      setCurrentResume(history[historyIndex - 1]);
-    }
-  };
-
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      setCurrentResume(history[historyIndex + 1]);
-    }
-  };
-
-  // Typography handlers
-  const handleFontSizeChange = (fontSize: number) => {
-    if (currentResume) {
-      const updatedResume = {
-        ...currentResume,
-        settings: {
-          ...currentResume.settings,
-          fontSize,
-        },
-        metadata: {
-          ...currentResume.metadata,
-          lastModified: new Date(),
-        },
-      };
-      handleResumeChange(updatedResume);
-    }
-  };
-
-  const handleFontFamilyChange = (fontFamily: string) => {
-    if (currentResume) {
-      const updatedResume = {
-        ...currentResume,
-        settings: {
-          ...currentResume.settings,
-          fontFamily,
-        },
-        metadata: {
-          ...currentResume.metadata,
-          lastModified: new Date(),
-        },
-      };
-      handleResumeChange(updatedResume);
-    }
-  };
-
-  // Color theme handlers
-  const handlePrimaryColorChange = (primaryColor: string) => {
-    if (currentResume) {
-      const updatedResume = {
-        ...currentResume,
-        settings: {
-          ...currentResume.settings,
-          primaryColor,
-        },
-        metadata: {
-          ...currentResume.metadata,
-          lastModified: new Date(),
-        },
-      };
-      handleResumeChange(updatedResume);
-    }
-  };
-
-  const handleSecondaryColorChange = (secondaryColor: string) => {
-    if (currentResume) {
-      const updatedResume = {
-        ...currentResume,
-        settings: {
-          ...currentResume.settings,
-          secondaryColor,
-        },
-        metadata: {
-          ...currentResume.metadata,
-          lastModified: new Date(),
-        },
-      };
-      handleResumeChange(updatedResume);
-    }
-  };
-
-  // Layout handlers
-  const handleSpacingChange = (spacing: 'compact' | 'normal' | 'relaxed') => {
-    if (currentResume) {
-      const updatedResume = {
-        ...currentResume,
-        settings: {
-          ...currentResume.settings,
-          spacing,
-        },
-        metadata: {
-          ...currentResume.metadata,
-          lastModified: new Date(),
-        },
-      };
-      handleResumeChange(updatedResume);
-    }
-  };
-
-  const handlePageMarginsChange = (pageMargins: 'narrow' | 'normal' | 'wide') => {
-    if (currentResume) {
-      const updatedResume = {
-        ...currentResume,
-        settings: {
-          ...currentResume.settings,
-          pageMargins,
-        },
-        metadata: {
-          ...currentResume.metadata,
-          lastModified: new Date(),
-        },
-      };
-      handleResumeChange(updatedResume);
-    }
   };
 
   if (!currentResume) {
@@ -375,22 +222,21 @@ export default function EditorPage({ params }: EditorPageProps) {
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Top Toolbar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-3">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2 flex-wrap">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => router.push('/dashboard')}
-              className="mb-2 sm:mb-0"
             >
               ← Back to Dashboard
             </Button>
-            <Separator orientation="vertical" className="h-6 hidden sm:block" />
+            <Separator orientation="vertical" className="h-6" />
             <Input
               value={currentResume.title}
               onChange={(e) => handleTitleChange(e.target.value)}
-              className="border-none text-lg font-semibold bg-transparent focus:bg-white dark:focus:bg-gray-700 w-full sm:w-64"
+              className="border-none text-lg font-semibold bg-transparent focus:bg-white dark:focus:bg-gray-700 w-64"
               placeholder="Resume Title"
             />
             <Badge variant="outline" className="text-xs">
@@ -398,9 +244,9 @@ export default function EditorPage({ params }: EditorPageProps) {
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             {lastSaved && (
-              <span className="text-xs text-gray-500 hidden sm:block">
+              <span className="text-xs text-gray-500">
                 Saved {lastSaved.toLocaleTimeString()}
               </span>
             )}
@@ -411,15 +257,17 @@ export default function EditorPage({ params }: EditorPageProps) {
               disabled={isSaving}
             >
               <Save className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
-              <span className="sm:hidden">{isSaving ? '...' : 'Save'}</span>
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
-            <Button variant="outline" size="sm" className="hidden sm:flex">
+            <Button variant="outline" size="sm">
               <Share2 className="w-4 h-4 mr-1" />
               Share
             </Button>
-            <ExportOptions resume={currentResume} />
-            <Button variant="outline" size="sm" className="hidden lg:flex">
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-1" />
+              Export
+            </Button>
+            <Button variant="outline" size="sm">
               <Settings className="w-4 h-4" />
             </Button>
           </div>
@@ -428,8 +276,8 @@ export default function EditorPage({ params }: EditorPageProps) {
 
       {/* Editor Toolbar */}
       <EditorToolbar
-        onUndo={handleUndo}
-        onRedo={handleRedo}
+        onUndo={() => console.log('Undo')}
+        onRedo={() => console.log('Redo')}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         zoom={zoom}
@@ -437,26 +285,12 @@ export default function EditorPage({ params }: EditorPageProps) {
         onPreviewModeChange={setPreviewMode}
         onFullPreview={() => setIsFullPreview(!isFullPreview)}
         isFullPreview={isFullPreview}
-        template={currentResume.template}
-        onTemplateChange={handleTemplateChange}
-        fontSize={currentResume.settings.fontSize}
-        fontFamily={currentResume.settings.fontFamily}
-        onFontSizeChange={handleFontSizeChange}
-        onFontFamilyChange={handleFontFamilyChange}
-        primaryColor={currentResume.settings.primaryColor}
-        secondaryColor={currentResume.settings.secondaryColor}
-        onPrimaryColorChange={handlePrimaryColorChange}
-        onSecondaryColorChange={handleSecondaryColorChange}
-        spacing={currentResume.settings.spacing}
-        pageMargins={currentResume.settings.pageMargins}
-        onSpacingChange={handleSpacingChange}
-        onPageMarginsChange={handlePageMarginsChange}
       />
 
       {/* Main Editor Area */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex  ">
         {!isFullPreview && (
-          <div className="w-full lg:w-80 bg-white dark:bg-gray-800 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700 max-h-60 lg:max-h-none overflow-y-auto lg:overflow-y-visible">
+          <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
             <ResumeEditorSidebar
               resume={currentResume}
               onResumeChange={handleResumeChange}
@@ -465,7 +299,7 @@ export default function EditorPage({ params }: EditorPageProps) {
         )}
 
         {/* Preview Area */}
-        <div className="flex-1 bg-gray-100 dark:bg-gray-900 p-2 lg:p-6 overflow-hidden">
+        <div className="flex-1 bg-gray-100 dark:bg-gray-900 p-6 overflow-hidden">
           <div className="h-full flex items-center justify-center">
             <div
               className="bg-white shadow-2xl overflow-hidden transition-all duration-200"
@@ -473,7 +307,6 @@ export default function EditorPage({ params }: EditorPageProps) {
                 transform: `scale(${zoom / 100})`,
                 width: previewMode === 'desktop' ? '8.5in' : '375px',
                 minHeight: previewMode === 'desktop' ? '11in' : '667px',
-                maxWidth: '100%',
               }}
             >
               <ScrollArea className="h-full">
