@@ -228,7 +228,10 @@ export function UserGuideSection() {
                         <div className={`transition-all duration-1000 delay-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
                             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
                                 <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${guides[activeGuide].color} flex items-center justify-center shadow-lg`}>
-                                    <guides[activeGuide].icon className="w-10 h-10 text-white" />
+                                    {(() => {
+                                        const GuideIcon = guides[activeGuide].icon;
+                                        return <GuideIcon className="w-10 h-10 text-white" />;
+                                    })()}
                                 </div>
                                 <h4 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4">
                                     {guides[activeGuide].title}

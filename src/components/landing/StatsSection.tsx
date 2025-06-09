@@ -13,13 +13,6 @@ export function StatsSection() {
     });
     const sectionRef = useRef<HTMLDivElement>(null);
 
-    const finalCounts = {
-        users: 50000,
-        resumes: 125000,
-        interviews: 75000,
-        success: 94
-    };
-
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
@@ -39,6 +32,13 @@ export function StatsSection() {
 
     useEffect(() => {
         if (isVisible) {
+            const finalCounts = {
+                users: 50000,
+                resumes: 125000,
+                interviews: 75000,
+                success: 94
+            };
+            
             const duration = 2000; // 2 seconds
             const steps = 60;
             const stepDuration = duration / steps;
@@ -102,7 +102,7 @@ export function StatsSection() {
     ];
 
     return (
-        <section ref={sectionRef} className="py-20 bg-white dark:bg-gray-900 relative">
+        <section id="stats" ref={sectionRef} className="py-20 bg-white dark:bg-gray-900 relative">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(59,130,246,0.15)_1px,transparent_0)] [background-size:50px_50px] opacity-30"></div>
 

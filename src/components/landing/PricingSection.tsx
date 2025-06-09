@@ -94,7 +94,7 @@ export function PricingSection() {
     ];
 
     return (
-        <section ref={sectionRef} className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
+        <section id="pricing" ref={sectionRef} className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(99,102,241,0.1)_1px,transparent_0)] [background-size:40px_40px]"></div>
 

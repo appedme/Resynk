@@ -20,7 +20,6 @@ import {
     useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Button } from "@/components/ui/button";
 import { GripVertical, ChevronDown, ChevronRight } from "lucide-react";
 
 interface SectionItem {
@@ -63,9 +62,12 @@ function SortableSectionItem({
 
     return (
         <div ref={setNodeRef} style={style} className={`${isDragging ? 'z-50' : ''}`}>
-            <Button
-                variant={isActive ? "default" : "ghost"}
-                className="w-full justify-between h-10 pl-2"
+            <div
+                className={`w-full flex items-center justify-between h-10 pl-2 pr-2 rounded-md cursor-pointer border ${
+                    isActive 
+                        ? "bg-primary text-primary-foreground border-primary" 
+                        : "bg-transparent hover:bg-accent hover:text-accent-foreground border-border"
+                }`}
                 onClick={() => {
                     onSelect(section.id);
                     if (!isExpanded) {
@@ -88,10 +90,8 @@ function SortableSectionItem({
                         <span className="text-red-500 text-xs">*</span>
                     )}
                 </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
+                <div
+                    className="h-6 w-6 p-0 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
                     onClick={(e) => {
                         e.stopPropagation();
                         onToggle(section.id);
@@ -102,8 +102,8 @@ function SortableSectionItem({
                     ) : (
                         <ChevronRight className="w-3 h-3" />
                     )}
-                </Button>
-            </Button>
+                </div>
+            </div>
         </div>
     );
 }
