@@ -116,6 +116,7 @@ export function ResumePreview({ resume, zoom, mode }: ResumePreviewProps) {
   return (
     <div 
       className="w-full h-full bg-white"
+      data-resume-preview
       style={{
         fontSize: `${(resume.settings.fontSize * zoom) / 100}px`,
         fontFamily: resume.settings.fontFamily,

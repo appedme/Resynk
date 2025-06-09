@@ -140,7 +140,7 @@ export function successResponse<T>(data: T): ApiResponse<T> {
   };
 }
 
-export function errorResponse(code: string, message: string, details?: any): ApiResponse {
+export function errorResponse(code: string, message: string, details?: unknown): ApiResponse {
   return {
     success: false,
     error: {

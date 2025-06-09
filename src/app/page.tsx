@@ -1,3 +1,4 @@
+import { Testimonials } from "@/components/landing/Testimonials";
 import { Brain, FileText, Sparkles, Users, Zap, Shield } from "lucide-react";
 
 export default function Home() {
@@ -129,6 +130,7 @@ export default function Home() {
           </button>
         </div>
       </section>
+      <Testimonials />
     </div>
   );
 }

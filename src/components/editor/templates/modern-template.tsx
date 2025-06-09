@@ -98,58 +98,92 @@ interface ModernTemplateProps {
 }
 
 export function ModernTemplate({ resume }: ModernTemplateProps) {
-  const { personalInfo, experience, education, skills, projects, certifications, languages, awards } = resume;
+  const { personalInfo, experience, education, skills, projects, certifications, languages, awards, settings } = resume;
+
+  // Calculate spacing based on settings
+  const getSpacing = () => {
+    switch (settings.spacing) {
+      case 'compact': return 'space-y-4';
+      case 'relaxed': return 'space-y-8';
+      default: return 'space-y-6';
+    }
+  };
+
+  // Calculate margins based on settings
+  const getMargins = () => {
+    switch (settings.pageMargins) {
+      case 'narrow': return 'p-4';
+      case 'wide': return 'p-12';
+      default: return 'p-8';
+    }
+  };
 
   return (
-    <div className="max-w-none mx-auto bg-white shadow-lg">
-      <div className="p-8 space-y-6">
+    <div 
+      className="max-w-none mx-auto bg-white shadow-lg"
+      style={{
+        fontFamily: settings.fontFamily,
+        fontSize: `${settings.fontSize}px`,
+        color: settings.secondaryColor,
+      }}
+    >
+      <div className={`${getMargins()} ${getSpacing()}`}>
         {/* Header Section */}
         <div className="text-center border-b pb-6">
           <h1 
             className="text-3xl font-bold mb-2"
-            style={{ color: resume.settings.primaryColor }}
+            style={{ color: settings.primaryColor }}
           >
             {personalInfo.firstName} {personalInfo.lastName}
           </h1>
           
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+          <div 
+            className="flex flex-wrap justify-center gap-4 text-sm"
+            style={{ color: settings.secondaryColor }}
+          >
             {personalInfo.email && (
               <div className="flex items-center gap-1">
-                <Mail className="w-4 h-4" />
+                <Mail className="w-4 h-4" style={{ color: settings.primaryColor }} />
                 <span>{personalInfo.email}</span>
               </div>
             )}
             {personalInfo.phone && (
               <div className="flex items-center gap-1">
-                <Phone className="w-4 h-4" />
+                <Phone className="w-4 h-4" style={{ color: settings.primaryColor }} />
                 <span>{personalInfo.phone}</span>
               </div>
             )}
             {personalInfo.location && (
               <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
+                <MapPin className="w-4 h-4" style={{ color: settings.primaryColor }} />
                 <span>{personalInfo.location}</span>
               </div>
             )}
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mt-2">
+          <div 
+            className="flex flex-wrap justify-center gap-4 text-sm mt-2"
+            style={{ color: settings.secondaryColor }}
+          >
             {personalInfo.website && (
               <div className="flex items-center gap-1">
-                <Globe className="w-4 h-4" />
+                <Globe className="w-4 h-4" style={{ color: settings.primaryColor }} />
                 <span>{personalInfo.website}</span>
               </div>
             )}
             {personalInfo.linkedin && (
               <div className="flex items-center gap-1">
-                <Linkedin className="w-4 h-4" />
+                <Linkedin className="w-4 h-4" style={{ color: settings.primaryColor }} />
                 <span>{personalInfo.linkedin}</span>
               </div>
             )}
           </div>
 
           {personalInfo.summary && (
-            <p className="mt-4 text-gray-700 max-w-2xl mx-auto leading-relaxed">
+            <p 
+              className="mt-4 max-w-2xl mx-auto leading-relaxed"
+              style={{ color: settings.secondaryColor }}
+            >
               {personalInfo.summary}
             </p>
           )}
@@ -160,7 +194,7 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
           <div>
             <h2 
               className="text-xl font-bold mb-4 pb-2 border-b"
-              style={{ color: resume.settings.primaryColor }}
+              style={{ color: settings.primaryColor }}
             >
               Professional Experience
             </h2>

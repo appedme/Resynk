@@ -1,11 +1,11 @@
 // API response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }
 
@@ -68,7 +68,7 @@ export interface ThemeConfig {
 
 // Editor types
 export interface EditorState {
-  activeSection: keyof ResumeData | null;
+  activeSection: string | null;
   isEditing: boolean;
   hasUnsavedChanges: boolean;
   lastSaved: Date | null;
@@ -100,7 +100,7 @@ export interface ResumeVersion {
   created_by: string;
   changes_summary: string;
   is_current: boolean;
-  data: ResumeData;
+  data: Record<string, unknown>;
 }
 
 // Export and sharing types

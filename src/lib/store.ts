@@ -97,7 +97,7 @@ export const useResumeStore = create<ResumeStore>()(
         });
       },
 
-      saveResume: async (resume) => {
+      saveResume: async () => {
         // Mock save implementation - would integrate with actual API
         return new Promise((resolve) => {
           setTimeout(() => {
@@ -198,12 +198,20 @@ export const useResumeStore = create<ResumeStore>()(
 );
 
 // Template store
+interface Template {
+  id: string;
+  name: string;
+  category: string;
+  preview: string;
+  isPremium: boolean;
+}
+
 interface TemplateStore {
   selectedTemplate: string | null;
-  templates: any[];
+  templates: Template[];
   loading: boolean;
   setSelectedTemplate: (templateId: string) => void;
-  setTemplates: (templates: any[]) => void;
+  setTemplates: (templates: Template[]) => void;
   setLoading: (loading: boolean) => void;
 }
 
@@ -217,15 +225,23 @@ export const useTemplateStore = create<TemplateStore>((set) => ({
 }));
 
 // UI store for global UI state
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  timestamp: Date;
+}
+
 interface UIStore {
   theme: 'light' | 'dark' | 'system';
   sidebarOpen: boolean;
   commandPaletteOpen: boolean;
-  notifications: any[];
+  notifications: Notification[];
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setSidebarOpen: (open: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
-  addNotification: (notification: any) => void;
+  addNotification: (notification: Notification) => void;
   removeNotification: (id: string) => void;
 }
 
