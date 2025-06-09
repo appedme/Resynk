@@ -74,6 +74,8 @@ interface Resume {
     id: string;
     title: string;
     content: string;
+    type: 'text' | 'list' | 'table';
+    order: number;
   }>;
   settings: {
     fontSize: number;
@@ -98,7 +100,7 @@ interface ModernTemplateProps {
 }
 
 export function ModernTemplate({ resume }: ModernTemplateProps) {
-  const { personalInfo, experience, education, skills, projects, certifications, languages, awards, settings } = resume;
+  const { personalInfo, experience, education, skills, projects, certifications, languages, awards, customSections, settings } = resume;
 
   // Calculate spacing based on settings
   const getSpacing = () => {
@@ -399,6 +401,57 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
             </div>
           </div>
         )}
+
+        {/* Custom Sections */}
+        {customSections && customSections.length > 0 && 
+          customSections
+            .sort((a, b) => a.order - b.order)
+            .map((section) => (
+              <div key={section.id}>
+                <h2 
+                  className="text-xl font-bold mb-4 pb-2 border-b"
+                  style={{ color: resume.settings.primaryColor }}
+                >
+                  {section.title}
+                </h2>
+                <div className="space-y-2">
+                  {section.type === 'list' ? (
+                    <ul className="list-disc list-inside space-y-1 text-gray-700">
+                      {section.content.split('\n').filter(line => line.trim()).map((line, lineIndex) => (
+                        <li key={lineIndex}>{line.replace(/^[•\-\*]\s*/, '')}</li>
+                      ))}
+                    </ul>
+                  ) : section.type === 'table' ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <tbody>
+                          {section.content.split('\n').filter(line => line.trim()).map((line, lineIndex) => {
+                            const cells = line.split('|').map(cell => cell.trim());
+                            return (
+                              <tr key={lineIndex} className={lineIndex === 0 ? 'font-semibold border-b border-gray-300' : ''}>
+                                {cells.map((cell, cellIndex) => (
+                                  <td 
+                                    key={cellIndex} 
+                                    className={`py-2 pr-4 ${lineIndex === 0 ? 'text-gray-800' : 'text-gray-700'}`}
+                                  >
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-gray-700 whitespace-pre-line">
+                      {section.content}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+        }
       </div>
     </div>
   );
