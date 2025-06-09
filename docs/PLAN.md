@@ -7,12 +7,14 @@ Resynk is a next-generation resume builder that revolutionizes how professionals
 - **Frontend**: Next.js 15 with TypeScript
 - **Styling**: Tailwind CSS 4
 - **Deployment**: Cloudflare (via OpenNext)
-- **Database**: Cloudflare D1 (SQLite)
+- **Database**: Cloudflare D1 (SQLite) with Prisma ORM
+- **State Management**: Zustand
 - **Storage**: Cloudflare R2
-- **Authentication**: Clerk or NextAuth
-- **AI**: OpenAI GPT-4 or Anthropic Claude
+- **Authentication**: StackAuth
+- **AI**: OpenAI GPT-4 API
 - **PDF Generation**: React-PDF or Puppeteer
-- **Real-time**: WebSockets or Server-Sent Events
+- **Real-time**: WebSockets or Server-Sent Events (will be added later)
+- **User Interface**: Geist UI or Shadcn UI
 
 ## Development Phases
 
