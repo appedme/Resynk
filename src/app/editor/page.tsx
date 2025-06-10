@@ -133,12 +133,33 @@ export default function EditorPage({ params }: EditorPageProps) {
 
   // Initialize or load resume
   useEffect(() => {
-    if (params?.id) {
-      // Load existing resume by ID
-      // This would typically fetch from API
-      console.log('Loading resume with ID:', params.id);
-    } else {
-      // Create new resume
+    const initializeResume = async () => {
+      if (params?.id) {
+        // Load existing resume by ID from database
+        try {
+          const response = await fetch(`/api/resumes/${params.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setCurrentResume(data.resume);
+            toast.success('Resume loaded successfully');
+          } else {
+            console.error('Failed to load resume');
+            toast.error('Failed to load resume');
+            // Fallback to new resume
+            createNewResume();
+          }
+        } catch (error) {
+          console.error('Error loading resume:', error);
+          toast.error('Error loading resume');
+          createNewResume();
+        }
+      } else {
+        // Create new resume
+        createNewResume();
+      }
+    };
+
+    const createNewResume = () => {
       const newResume: Resume = {
         id: crypto.randomUUID(),
         title: "New Resume",
@@ -178,8 +199,10 @@ export default function EditorPage({ params }: EditorPageProps) {
         },
       };
       setCurrentResume(newResume);
-    }
-  }, [params?.id, setCurrentResume]);
+    };
+
+    initializeResume();
+  }, [params?.id]);
 
   const handleSave = async () => {
     if (!currentResume) return;

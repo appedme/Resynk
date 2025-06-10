@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, FileText, MoreHorizontal, Search, Star, Eye, Download, Share2, Copy, Trash2, Edit3, BarChart3, TrendingUp, Users, Clock, Grid, List, SortAsc, SortDesc } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useUser } from "@stackframe/stack";
 
 import {
   DropdownMenu,
@@ -29,6 +30,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import Link from "next/link";
 import Header from "@/components/header";
+import { useRouter } from "next/navigation";
+import { NewResumeDialog } from "@/components/editor/new-resume-dialog";
 
 // Types
 interface Resume {
@@ -117,6 +120,8 @@ const mockResumes: Resume[] = [
 ];
 
 export default function Dashboard() {
+  const user = useUser();
+  const router = useRouter();
   const [resumes, setResumes] = useState<Resume[]>(mockResumes);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"lastModified" | "title" | "atsScore" | "views">("lastModified");
@@ -125,15 +130,60 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
+  const [userResumes, setUserResumes] = useState<Resume[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!user) {
+      router.push('/handler/sign-in');
+      return;
+    }
+    
+    // Load user's resumes from database
+    loadUserResumes();
+  }, [user, router]);
+
+  const loadUserResumes = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch('/api/resumes');
+      if (response.ok) {
+        const data = await response.json();
+        setUserResumes(data.resumes || []);
+      }
+    } catch (error) {
+      console.error('Failed to load resumes:', error);
+      toast.error('Failed to load your resumes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show loading state while checking authentication
+  if (!user || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Use user's actual resumes if available, fallback to mock data for now
+  const displayResumes = userResumes.length > 0 ? userResumes : resumes;
 
   // Calculate dashboard stats
   const stats: DashboardStats = {
-    totalResumes: resumes.length,
-    avgAtsScore: Math.round(resumes.reduce((acc, resume) => acc + resume.atsScore, 0) / resumes.length),
-    totalViews: resumes.reduce((acc, resume) => acc + resume.views, 0),
-    totalDownloads: resumes.reduce((acc, resume) => acc + resume.downloads, 0),
-    activeResumes: resumes.filter(r => r.status === 'published').length,
-    recentActivity: resumes.filter(r => {
+    totalResumes: displayResumes.length,
+    avgAtsScore: displayResumes.length > 0 ? Math.round(displayResumes.reduce((acc, resume) => acc + resume.atsScore, 0) / displayResumes.length) : 0,
+    totalViews: displayResumes.reduce((acc, resume) => acc + resume.views, 0),
+    totalDownloads: displayResumes.reduce((acc, resume) => acc + resume.downloads, 0),
+    activeResumes: displayResumes.filter(r => r.status === 'published').length,
+    recentActivity: displayResumes.filter(r => {
       const lastModified = new Date(r.updatedAt);
       const today = new Date();
       const diffTime = Math.abs(today.getTime() - lastModified.getTime());
@@ -143,7 +193,7 @@ export default function Dashboard() {
   };
 
   // Filter and sort resumes
-  const filteredResumes = resumes
+  const filteredResumes = displayResumes
     .filter(resume => {
       const matchesSearch = resume.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           resume.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -176,12 +226,12 @@ export default function Dashboard() {
     setResumes(resumes.map(resume => 
       resume.id === id ? { ...resume, favorite: !resume.favorite } : resume
     ));
-    const resume = resumes.find(r => r.id === id);
+    const resume = displayResumes.find(r => r.id === id);
     toast.success(resume?.favorite ? 'Removed from favorites' : 'Added to favorites');
   };
 
   const handleDuplicate = (id: string) => {
-    const original = resumes.find(r => r.id === id);
+    const original = displayResumes.find(r => r.id === id);
     if (original) {
       const duplicate: Resume = {
         ...original,
@@ -263,12 +313,7 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/editor">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Resume
-                </Button>
-              </Link>
+              <NewResumeDialog onResumeCreated={loadUserResumes} />
             </div>
           </div>
         </div>

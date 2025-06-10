@@ -47,53 +47,57 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 }
                 setExportProgress(40);
 
-                // Create high-quality canvas with proper options for style preservation
+                // Get safe colors for problematic color functions only
+                const safePrimaryColor = ColorUtils.toHex(resume.settings?.primaryColor || '#2563eb');
+
+                // Create high-quality canvas with style preservation
                 const canvas = await html2canvas(resumeElement, {
-                    scale: 3, // High DPI for crisp text
+                    scale: 2.5, // High DPI for crisp text
                     useCORS: true,
                     allowTaint: false,
-                    backgroundColor: '#ffffff',
+                    backgroundColor: null, // Use original background
                     logging: false,
                     removeContainer: false,
-                    foreignObjectRendering: true, // Enable for better CSS support
+                    foreignObjectRendering: true,
                     imageTimeout: 15000,
                     onclone: (clonedDoc, element) => {
-                        // Ensure all styles are preserved in the cloned document
-                        const allStyleSheets = Array.from(document.styleSheets);
-                        allStyleSheets.forEach(styleSheet => {
-                            try {
-                                const rules = Array.from(styleSheet.cssRules || styleSheet.rules || []);
-                                const style = clonedDoc.createElement('style');
-                                style.textContent = rules.map(rule => rule.cssText).join('\n');
-                                clonedDoc.head.appendChild(style);
-                            } catch (e) {
-                                // Handle cross-origin stylesheets
-                                console.warn('Could not clone stylesheet:', e);
-                            }
+                        // Copy ALL stylesheets from main document to preserve styling
+                        const originalStyleSheets = document.querySelectorAll('style, link[rel="stylesheet"]');
+                        originalStyleSheets.forEach(sheet => {
+                            const clonedSheet = sheet.cloneNode(true);
+                            clonedDoc.head.appendChild(clonedSheet);
                         });
 
-                        // Force specific styling to ensure visibility
-                        element.style.color = resume.settings?.primaryColor || '#1a1a1a';
-                        element.style.backgroundColor = '#ffffff';
-                        element.style.fontFamily = resume.settings?.fontFamily || 'Arial, sans-serif';
-                        
-                        // Apply styles to all text elements
-                        const textElements = element.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, li, td, th');
-                        textElements.forEach((el: Element) => {
+                        // Only sanitize problematic color functions, preserve everything else
+                        const allElements = element.querySelectorAll('*');
+                        allElements.forEach(el => {
                             const htmlEl = el as HTMLElement;
-                            if (!htmlEl.style.color || htmlEl.style.color === '') {
-                                htmlEl.style.color = '#1a1a1a';
+                            const style = htmlEl.getAttribute('style');
+                            if (style) {
+                                // Only replace problematic color functions, keep all other styles
+                                const sanitizedStyle = ColorUtils.sanitizeStyleColors(style, safePrimaryColor);
+                                if (sanitizedStyle !== style) {
+                                    htmlEl.setAttribute('style', sanitizedStyle);
+                                }
                             }
-                            htmlEl.style.fontFamily = resume.settings?.fontFamily || 'Arial, sans-serif';
                         });
 
-                        // Ensure headings have proper styling
-                        const headings = element.querySelectorAll('h1, h2, h3, h4, h5, h6');
-                        headings.forEach((heading: Element) => {
-                            const h = heading as HTMLElement;
-                            h.style.color = resume.settings?.primaryColor || '#1a1a1a';
-                            h.style.fontWeight = 'bold';
-                        });
+                        // Ensure fonts are preserved
+                        element.style.fontFamily = resume.settings?.fontFamily || 'inherit';
+                        
+                        // Add minimal PDF-safe overrides only for known problematic cases
+                        const pdfStyle = clonedDoc.createElement('style');
+                        pdfStyle.textContent = `
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+                            /* Only override problematic color functions */
+                            [style*="oklch"], [style*="color("] {
+                                color: ${safePrimaryColor} !important;
+                            }
+                        `;
+                        clonedDoc.head.appendChild(pdfStyle);
                     }
                 });
 
