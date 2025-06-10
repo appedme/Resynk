@@ -4,24 +4,41 @@ import type { ResumeData } from "@/types/resume";
 import { ModernTemplate } from "./templates/modern-template";
 import { ProfessionalTemplate } from "./templates/professional-template";
 import { CreativeTemplate } from "./templates/creative-template";
+import { convertEditorResumeToResumeData, type EditorResume } from "@/lib/data-converter";
 
 interface ResumePreviewProps {
-  resume: ResumeData;
+  resume: EditorResume | null;
   zoom: number;
   mode: 'desktop' | 'mobile';
   template?: 'modern' | 'professional' | 'creative';
 }
 
 export function ResumePreview({ resume, zoom, mode, template = 'modern' }: ResumePreviewProps) {
+  // Convert editor resume to ResumeData format
+  const resumeData: ResumeData = resume ? convertEditorResumeToResumeData(resume) : {
+    personal: { full_name: 'Your Name', email: '' },
+    summary: '',
+    experience: [],
+    education: [],
+    skills: [],
+    projects: [],
+    achievements: [],
+    certifications: [],
+    languages: [],
+    custom_sections: [],
+  };
+
   const renderTemplate = () => {
-    switch (template) {
+    const templateToUse = resume?.template || template;
+    
+    switch (templateToUse) {
       case 'professional':
-        return <ProfessionalTemplate resume={resume} mode={mode} />;
+        return <ProfessionalTemplate resume={resumeData} mode={mode} />;
       case 'creative':
-        return <CreativeTemplate resume={resume} mode={mode} />;
+        return <CreativeTemplate resume={resumeData} mode={mode} />;
       case 'modern':
       default:
-        return <ModernTemplate resume={resume} mode={mode} />;
+        return <ModernTemplate resume={resumeData} mode={mode} />;
     }
   };
 
@@ -31,7 +48,7 @@ export function ResumePreview({ resume, zoom, mode, template = 'modern' }: Resum
       data-resume-preview
       style={{
         fontSize: `${zoom}%`,
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: resume?.settings?.fontFamily || 'Arial, sans-serif',
         color: '#333',
       }}
     >

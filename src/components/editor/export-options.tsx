@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import type { ResumeData } from "@/types/resume";
+import { convertEditorResumeToResumeData, type EditorResume } from "@/lib/data-converter";
 
 interface ExportOptionsProps {
-    resume: ResumeData;
+    resume: EditorResume;
 }
 
 export function ExportOptions({ resume }: ExportOptionsProps) {
@@ -30,11 +30,11 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
         setExportProgress(0);
 
         try {
-            const fullName = resume.personal.full_name.replace(/\s+/g, '_');
-            const fileName = `${fullName}_Resume.${exportFormat}`;
+            // Convert editor resume to ResumeData format for proper access
+            const resumeData = convertEditorResumeToResumeData(resume);
+            const fileName = `${resumeData.personal.full_name.replace(/\s+/g, '_')}_Resume.${exportFormat}`;
 
             if (exportFormat === 'pdf') {
-                // Update progress
                 setExportProgress(20);
 
                 // Find the resume preview element
@@ -70,7 +70,6 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 const imgWidth = pageWidth;
                 const imgHeight = (canvas.height * pageWidth) / canvas.width;
 
-                // If image is taller than page, we need to handle multiple pages
                 if (imgHeight <= pageHeight) {
                     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 } else {
@@ -89,14 +88,12 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 }
 
                 setExportProgress(90);
-
-                // Download the PDF
                 pdf.save(fileName);
 
             } else if (exportFormat === 'word') {
-                // For Word export, we'll create a simple HTML version
-                const htmlContent = generateHTMLResume(resume);
-                const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                const resumeData = convertEditorResumeToResumeData(resume);
+                const htmlContent = generateHTMLResume(resumeData);
+                const blob = new Blob([htmlContent], { type: 'text/html' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -107,7 +104,6 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 URL.revokeObjectURL(url);
 
             } else if (exportFormat === 'txt') {
-                // Generate plain text version
                 const textContent = generateTextResume(resume);
                 const blob = new Blob([textContent], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
@@ -170,7 +166,6 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
             <p><strong>Duration:</strong> ${exp.start_date} - ${exp.is_current ? 'Present' : exp.end_date || 'Present'}</p>
             ${exp.location ? `<p><strong>Location:</strong> ${exp.location}</p>` : ''}
             <p>${exp.description}</p>
-            ${exp.achievements?.length ? `<p><strong>Achievements:</strong> ${exp.achievements.join(', ')}</p>` : ''}
         </div>
         `).join('')}
     </div>
@@ -227,7 +222,6 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 if (exp.location) text += ` | ${exp.location}`;
                 text += '\n';
                 text += `${exp.description}\n`;
-                if (exp.achievements?.length) text += `Achievements: ${exp.achievements.join(', ')}\n`;
                 text += '\n';
             });
         }
@@ -264,13 +258,10 @@ ${resume.personal.full_name}`);
     };
 
     const handleShareLink = async () => {
-        // In a real implementation, this would generate a shareable link
-        // For now, we'll use a placeholder URL
         const shareUrl = `${window.location.origin}/resume/shared`;
 
         try {
             await navigator.clipboard.writeText(shareUrl);
-            // Could show a toast notification here
             console.log('Share link copied to clipboard');
         } catch (error) {
             console.error('Failed to copy link:', error);
@@ -307,7 +298,7 @@ ${resume.personal.full_name}`);
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="word" id="word" />
-                                <Label htmlFor="word">Microsoft Word (.docx)</Label>
+                                <Label htmlFor="word">HTML Document (.html)</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="txt" id="txt" />
