@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Color Function Test</title>
+    <style>
+        .test-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .color-test {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .color-box {
+            width: 50px;
+            height: 30px;
+            margin-right: 15px;
+            border: 1px solid #000;
+        }
+
+        .status {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>Color Function Conversion Test</h1>
+        <p>Testing various CSS color functions to ensure they can be converted to hex:</p>
+
+        <div id="test-results"></div>
+
+        <div class="instructions">
+            <h3>Test Instructions:</h3>
+            <ol>
+                <li>If all colors show as colored boxes (not black), the conversion is working</li>
+                <li>Check browser console for any parsing errors</li>
+                <li>Green status means successful conversion</li>
+                <li>Red status means conversion failed</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Simulate the ColorUtils.toHex function
+        function convertColorToHex(color, fallback = '#000000') {
+            if (!color || typeof color !== 'string') {
+                return fallback;
+            }
+
+            // If already hex, return as-is
+            if (color.startsWith('#')) {
+                return color;
+            }
+
+            // Handle CSS variables
+            if (color.includes('var(')) {
+                return fallback;
+            }
+
+            // Create temporary element to test color parsing
+            const tempEl = document.createElement('div');
+            tempEl.style.color = color;
+            document.body.appendChild(tempEl);
+
+            try {
+                const computedColor = window.getComputedStyle(tempEl).color;
+                document.body.removeChild(tempEl);
+
+                // Convert rgb to hex
+                const rgbMatch = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                if (rgbMatch) {
+                    const r = parseInt(rgbMatch[1]);
+                    const g = parseInt(rgbMatch[2]);
+                    const b = parseInt(rgbMatch[3]);
+                    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+                }
+            } catch (error) {
+                document.body.removeChild(tempEl);
+                console.warn('Failed to parse color:', color, error);
+            }
+
+            return fallback;
+        }
+
+        // Test various color formats
+        const testColors = [
+            { color: 'oklch(0.5 0.2 180)', description: 'OKLCH color' },
+            { color: 'color(srgb 1 0 0)', description: 'color() sRGB red' },
+            { color: 'color(display-p3 1 0 0)', description: 'color() Display P3 red' },
+            { color: 'hsl(180, 50%, 50%)', description: 'HSL color' },
+            { color: 'rgb(100, 150, 200)', description: 'RGB color' },
+            { color: 'rgba(255, 100, 50, 0.8)', description: 'RGBA color' },
+            { color: '#ff0000', description: 'Hex color' },
+            { color: 'blue', description: 'Named color' },
+            { color: 'var(--primary)', description: 'CSS variable (should fallback)' }
+        ];
+
+        const resultsDiv = document.getElementById('test-results');
+
+        testColors.forEach((test, index) => {
+            const converted = convertColorToHex(test.color);
+            const isSuccess = converted !== '#000000';
+
+            const testDiv = document.createElement('div');
+            testDiv.className = 'color-test';
+
+            const colorBox = document.createElement('div');
+            colorBox.className = 'color-box';
+            colorBox.style.backgroundColor = converted;
+
+            const description = document.createElement('span');
+            description.textContent = `${test.description}: ${test.color} → ${converted}`;
+
+            const status = document.createElement('span');
+            status.className = `status ${isSuccess ? 'success' : 'error'}`;
+            status.textContent = isSuccess ? '✓ Success' : '✗ Failed';
+
+            testDiv.appendChild(colorBox);
+            testDiv.appendChild(description);
+            testDiv.appendChild(status);
+
+            resultsDiv.appendChild(testDiv);
+
+            console.log(`Test ${index + 1}: ${test.color} → ${converted} (${isSuccess ? 'Success' : 'Failed'})`);
+        });
+    </script>
+</body>
+
+</html>

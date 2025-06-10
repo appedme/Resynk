@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PDF Export Test</title>
+    <style>
+        .test-container {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .oklch-test {
+            color: oklch(0.5 0.2 180);
+            background: oklch(0.9 0.1 120);
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .hsl-test {
+            color: hsl(220, 100%, 50%);
+            background: hsl(120, 50%, 95%);
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .gradient-test {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .var-test {
+            color: var(--primary-color, #2563eb);
+            background: var(--secondary-color, #f8fafc);
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container" data-resume-preview>
+        <h1>PDF Export Color Test</h1>
+
+        <div class="oklch-test">
+            This text uses OKLCH colors that should be converted to hex
+        </div>
+
+        <div class="hsl-test">
+            This text uses HSL colors that should be converted
+        </div>
+
+        <div class="gradient-test">
+            This has a gradient background that should be simplified
+        </div>
+
+        <div class="var-test">
+            This uses CSS variables that should fall back to safe colors
+        </div>
+
+        <svg width="16" height="16" style="margin-right: 6px;">
+            <circle cx="8" cy="8" r="6" fill="oklch(0.6 0.3 200)" />
+        </svg>
+        <span>Icon with OKLCH color</span>
+    </div>
+
+    <script>
+        // Test the ColorUtils functionality
+        async function testColorConversion() {
+            console.log('Testing color conversion...');
+
+            // Simulate the PDF export color conversion process
+            const element = document.querySelector('[data-resume-preview]');
+            const allElements = element.querySelectorAll('*');
+
+            console.log('Found elements to process:', allElements.length);
+
+            // This would be where our ColorUtils.sanitizeStyleColors would run
+            allElements.forEach((el, index) => {
+                const style = el.getAttribute('style');
+                if (style) {
+                    console.log(`Element ${index} original style:`, style);
+                    // In real implementation, this would use ColorUtils.sanitizeStyleColors
+                }
+            });
+
+            console.log('Color conversion test completed');
+        }
+
+        // Run test after page loads
+        window.addEventListener('load', testColorConversion);
+    </script>
+</body>
+
+</html>

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Save,
   Share2,
-  Settings
+  Settings,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResumeEditorSidebar } from "@/components/editor/resume-editor-sidebar";
 import { ResumePreview } from "@/components/editor/resume-preview";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
-import { ExportOptions } from "@/components/editor/export-options";
+import { ExportOptions } from "@/components/editor/export-options-new";
+import { getSampleResumeData } from "@/lib/sample-data";
+import { Toaster, toast } from "sonner";
 
 // Editor-specific Resume interface for simpler usage
 interface Resume {
@@ -361,6 +364,31 @@ export default function EditorPage({ params }: EditorPageProps) {
     setZoom(prev => Math.max(prev - 10, 50));
   };
 
+  // Prefill functionality
+  const handlePrefillWithSampleData = () => {
+    if (!currentResume) return;
+
+    const sampleData = getSampleResumeData();
+    const updatedResume: Resume = {
+      ...currentResume,
+      personalInfo: sampleData.personalInfo,
+      experience: sampleData.experience,
+      education: sampleData.education,
+      skills: sampleData.skills,
+      projects: sampleData.projects,
+      certifications: sampleData.certifications,
+      languages: sampleData.languages,
+      awards: sampleData.awards,
+      customSections: sampleData.customSections
+    };
+    setCurrentResume(updatedResume);
+    setHistory(prev => [...prev, updatedResume]);
+    setHistoryIndex(prev => prev + 1);
+    toast.success('Resume filled with sample data!', {
+      description: 'You can now edit any field by clicking on it in the preview.'
+    });
+  };
+
   if (!currentResume) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -415,6 +443,15 @@ export default function EditorPage({ params }: EditorPageProps) {
             <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="w-4 h-4 mr-1" />
               Share
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrefillWithSampleData}
+              className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
+            >
+              <Sparkles className="w-4 h-4 mr-1" />
+              Prefill
             </Button>
             <ExportOptions resume={currentResume} />
             <Button variant="outline" size="sm">
@@ -478,12 +515,15 @@ export default function EditorPage({ params }: EditorPageProps) {
                   resume={currentResume}
                   zoom={zoom}
                   mode={previewMode}
+                  onResumeUpdate={handleResumeChange}
+                  isInlineEditingEnabled={true}
                 />
               </ScrollArea>
             </div>
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

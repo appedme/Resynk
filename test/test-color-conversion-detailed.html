@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Color Utils Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .color-demo {
+            display: inline-block;
+            width: 50px;
+            height: 20px;
+            margin: 5px;
+            border: 1px solid #000;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e8f4f8;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Color Utils Testing</h1>
+
+    <div class="test-section">
+        <h2>OKLCH Color Tests</h2>
+        <div id="oklch-tests"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>CSS Variable Tests</h2>
+        <div id="var-tests"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Style Sanitization Tests</h2>
+        <div id="style-tests"></div>
+    </div>
+
+    <script type="module">
+        // Import the ColorUtils (we'll simulate it here since we can't import TypeScript directly)
+
+        // Simulate the ColorUtils.toHex function
+        function toHex(color, fallback = '#000000') {
+            if (!color || typeof color !== 'string') {
+                return fallback;
+            }
+
+            // If already hex, return as-is
+            if (color.startsWith('#')) {
+                return color;
+            }
+
+            // Handle CSS variables
+            if (color.includes('var(')) {
+                return fallback;
+            }
+
+            // Handle oklch format
+            if (color.includes('oklch')) {
+                try {
+                    const oklchMatch = color.match(/oklch\\(\\s*([^)]+)\\s*\\)/);
+                    if (oklchMatch) {
+                        const values = oklchMatch[1].split(/[\\s,]+/).filter(v => v.trim()).map(v => v.trim());
+
+                        const l = Math.min(1, Math.max(0, parseFloat(values[0]) || 0.5));
+                        const c = Math.min(0.37, Math.max(0, parseFloat(values[1]) || 0.1));
+                        const h = parseFloat(values[2]) || 0;
+
+                        // Simple HSL approximation
+                        const saturation = Math.min(1, c * 2.7);
+                        const hue = h % 360;
+
+                        // Convert HSL to RGB
+                        const hslToRgb = (h, s, l) => {
+                            h /= 360;
+                            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                            const p = 2 * l - q;
+                            const hue2rgb = (p, q, t) => {
+                                if (t < 0) t += 1;
+                                if (t > 1) t -= 1;
+                                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                                if (t < 1 / 2) return q;
+                                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                                return p;
+                            };
+                            const r = Math.round(hue2rgb(p, q, h + 1 / 3) * 255);
+                            const g = Math.round(hue2rgb(p, q, h) * 255);
+                            const b = Math.round(hue2rgb(p, q, h - 1 / 3) * 255);
+                            return [r, g, b];
+                        };
+
+                        const [r, g, b] = hslToRgb(hue, saturation, l);
+                        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+                    }
+                } catch (error) {
+                    console.warn('Failed to parse oklch color:', color, error);
+                }
+                return fallback;
+            }
+
+            // Use browser's built-in color parsing
+            const tempEl = document.createElement('div');
+            tempEl.style.color = color;
+            document.body.appendChild(tempEl);
+            const computedColor = window.getComputedStyle(tempEl).color;
+            document.body.removeChild(tempEl);
+
+            const rgbMatch = computedColor.match(/rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)/);
+            if (rgbMatch) {
+                const r = parseInt(rgbMatch[1]);
+                const g = parseInt(rgbMatch[2]);
+                const b = parseInt(rgbMatch[3]);
+                return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+            }
+
+            return fallback;
+        }
+
+        function sanitizeStyleColors(style, primaryColor = '#2563eb') {
+            if (!style) return style;
+
+            const safePrimary = toHex(primaryColor);
+
+            return style
+                .replace(/color:\\s*oklch\\([^)]*\\)\\s*;?/gi, `color: ${safePrimary};`)
+                .replace(/background(-color)?:\\s*oklch\\([^)]*\\)\\s*;?/gi, 'background: transparent;')
+                .replace(/border(-color)?:\\s*oklch\\([^)]*\\)\\s*;?/gi, 'border-color: #e5e7eb;')
+                .replace(/color:\\s*var\\([^)]*\\)\\s*;?/gi, `color: ${safePrimary};`)
+                .replace(/background(-color)?:\\s*var\\([^)]*\\)\\s*;?/gi, 'background: transparent;')
+                .replace(/border(-color)?:\\s*var\\([^)]*\\)\\s*;?/gi, 'border-color: #e5e7eb;')
+                .replace(/background(-image)?:\\s*linear-gradient[^;]*;?/gi, `background: ${safePrimary};`)
+                .replace(/background(-image)?:\\s*radial-gradient[^;]*;?/gi, `background: ${safePrimary};`);
+        }
+
+        // Test OKLCH colors
+        const oklchTests = [
+            'oklch(0.5 0.2 180)',
+            'oklch(0.7 0.15 280)',
+            'oklch(0.3 0.1 60)',
+            'oklch(0.8 0.25 120)',
+        ];
+
+        const oklchContainer = document.getElementById('oklch-tests');
+        oklchTests.forEach(color => {
+            const result = toHex(color);
+            const div = document.createElement('div');
+            div.className = 'result';
+            div.innerHTML = `
+                <strong>Input:</strong> ${color}<br>
+                <strong>Output:</strong> ${result}<br>
+                <div class="color-demo" style="background-color: ${result}"></div>
+            `;
+            oklchContainer.appendChild(div);
+        });
+
+        // Test CSS variables
+        const varTests = [
+            'var(--primary-color)',
+            'var(--secondary-color, #ff0000)',
+            'var(--text-color, hsl(220, 100%, 50%))',
+        ];
+
+        const varContainer = document.getElementById('var-tests');
+        varTests.forEach(color => {
+            const result = toHex(color);
+            const div = document.createElement('div');
+            div.className = 'result';
+            div.innerHTML = `
+                <strong>Input:</strong> ${color}<br>
+                <strong>Output:</strong> ${result}<br>
+                <div class="color-demo" style="background-color: ${result}"></div>
+            `;
+            varContainer.appendChild(div);
+        });
+
+        // Test style sanitization
+        const styleTests = [
+            'color: oklch(0.5 0.2 180); background: linear-gradient(45deg, #ff0000, #00ff00);',
+            'background-color: var(--primary); color: hsl(220, 100%, 50%);',
+            'border-color: oklch(0.7 0.3 120); margin: 10px;',
+        ];
+
+        const styleContainer = document.getElementById('style-tests');
+        styleTests.forEach(style => {
+            const result = sanitizeStyleColors(style, '#2563eb');
+            const div = document.createElement('div');
+            div.className = 'result';
+            div.innerHTML = `
+                <strong>Original:</strong><br>
+                <pre>${style}</pre>
+                <strong>Sanitized:</strong><br>
+                <pre>${result}</pre>
+            `;
+            styleContainer.appendChild(div);
+        });
+
+        console.log('Color conversion tests completed!');
+    </script>
+</body>
+
+</html>
