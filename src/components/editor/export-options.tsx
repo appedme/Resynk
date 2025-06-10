@@ -44,30 +44,145 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                     throw new Error('Resume preview element not found');
                 }
 
+                // Helper function to sanitize CSS for PDF export
+                const sanitizeCSSForPDF = (element: HTMLElement) => {
+                    // Store original styles to restore later
+                    const originalStyles = new Map();
+                    
+                    const allElements = element.querySelectorAll('*');
+                    allElements.forEach((el, index) => {
+                        const htmlEl = el as HTMLElement;
+                        const style = htmlEl.getAttribute('style');
+                        originalStyles.set(index, style);
+                        
+                        if (style) {
+                            // Remove problematic CSS functions
+                            const cleanStyle = style
+                                .replace(/color:\s*oklch[^;]+;?/g, `color: ${safePrimaryColor};`)
+                                .replace(/color:\s*hsl[^;]+;?/g, `color: ${safePrimaryColor};`)
+                                .replace(/color:\s*var\([^)]+\);?/g, `color: ${safePrimaryColor};`)
+                                .replace(/background[^:]*:\s*oklch[^;]+;?/g, 'background: transparent;')
+                                .replace(/background[^:]*:\s*linear-gradient[^;]+;?/g, `background: ${safePrimaryColor};`)
+                                .replace(/background[^:]*:\s*var\([^)]+\);?/g, 'background: transparent;')
+                                .replace(/border[^:]*:\s*var\([^)]+\);?/g, 'border-color: #e5e7eb;');
+                            
+                            htmlEl.setAttribute('style', cleanStyle);
+                        }
+                    });
+                    
+                    return () => {
+                        // Restore original styles
+                        allElements.forEach((el, index) => {
+                            const htmlEl = el as HTMLElement;
+                            const originalStyle = originalStyles.get(index);
+                            if (originalStyle) {
+                                htmlEl.setAttribute('style', originalStyle);
+                            } else {
+                                htmlEl.removeAttribute('style');
+                            }
+                        });
+                    };
+                };
+
                 setExportProgress(40);
 
-                // Create a temporary style element to override problematic CSS for PDF export
+                // Helper function to convert any color format to hex
+                const convertToHex = (color: string): string => {
+                    if (!color) return '#000000';
+                    
+                    // If already hex, return as-is
+                    if (color.startsWith('#')) return color;
+                    
+                    // Create temporary element to get computed color
+                    const tempEl = document.createElement('div');
+                    tempEl.style.color = color;
+                    document.body.appendChild(tempEl);
+                    const computedColor = window.getComputedStyle(tempEl).color;
+                    document.body.removeChild(tempEl);
+                    
+                    // Convert rgb to hex
+                    const rgbMatch = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                    if (rgbMatch) {
+                        const r = parseInt(rgbMatch[1]);
+                        const g = parseInt(rgbMatch[2]);
+                        const b = parseInt(rgbMatch[3]);
+                        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+                    }
+                    
+                    // Fallback to black if conversion fails
+                    return '#000000';
+                };
+
+                // Convert colors to safe hex values
+                const safePrimaryColor = convertToHex(resume.settings?.primaryColor || '#1a1a1a');
+                const safeSecondaryColor = convertToHex(resume.settings?.secondaryColor || '#6b7280');
+
+                // Create comprehensive style override for PDF export
                 const tempStyle = document.createElement('style');
                 tempStyle.textContent = `
-                    /* Override CSS custom properties with hex values for PDF export */
-                    [data-resume-preview] * {
+                    /* Force all elements to use only hex colors for PDF export */
+                    [data-resume-preview], [data-resume-preview] * {
+                        /* Override CSS custom properties */
                         --background: #ffffff !important;
                         --foreground: #1a1a1a !important;
-                        --primary: #1a1a1a !important;
-                        --secondary: #f5f5f5 !important;
+                        --primary: ${safePrimaryColor} !important;
+                        --secondary: ${safeSecondaryColor} !important;
                         --muted: #f5f5f5 !important;
                         --muted-foreground: #6b7280 !important;
                         --border: #e5e7eb !important;
                         --ring: #9ca3af !important;
+                        
+                        /* Remove any problematic color functions */
+                        background: inherit !important;
+                        background-color: inherit !important;
+                        border-color: inherit !important;
+                        outline-color: inherit !important;
+                        text-decoration-color: inherit !important;
+                        fill: inherit !important;
+                        stroke: inherit !important;
                     }
-                    /* Force hex colors for elements that might use oklch */
+                    
+                    /* Force specific element colors */
+                    [data-resume-preview] {
+                        background: #ffffff !important;
+                        color: #1a1a1a !important;
+                    }
+                    
                     [data-resume-preview] h1, 
                     [data-resume-preview] h2, 
-                    [data-resume-preview] h3 {
-                        color: ${resume.settings?.primaryColor || '#1a1a1a'} !important;
+                    [data-resume-preview] h3,
+                    [data-resume-preview] h4,
+                    [data-resume-preview] h5,
+                    [data-resume-preview] h6 {
+                        color: ${safePrimaryColor} !important;
+                    }
+                    
+                    [data-resume-preview] .text-primary,
+                    [data-resume-preview] [style*="color: var(--primary)"] {
+                        color: ${safePrimaryColor} !important;
+                    }
+                    
+                    [data-resume-preview] .text-secondary,
+                    [data-resume-preview] [style*="color: var(--secondary)"] {
+                        color: ${safeSecondaryColor} !important;
+                    }
+                    
+                    /* Remove gradients and modern CSS functions */
+                    [data-resume-preview] .bg-gradient-to-r,
+                    [data-resume-preview] .bg-gradient-to-l,
+                    [data-resume-preview] .bg-gradient-to-t,
+                    [data-resume-preview] .bg-gradient-to-b,
+                    [data-resume-preview] .bg-gradient-to-br,
+                    [data-resume-preview] .bg-gradient-to-bl,
+                    [data-resume-preview] .bg-gradient-to-tr,
+                    [data-resume-preview] .bg-gradient-to-tl {
+                        background: ${safePrimaryColor} !important;
                     }
                 `;
                 document.head.appendChild(tempStyle);
+
+                // Sanitize the DOM for PDF export
+                const restoreStyles = sanitizeCSSForPDF(resumeElement);
 
                 let canvas;
                 try {
@@ -79,45 +194,117 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                         backgroundColor: '#ffffff',
                         width: resumeElement.scrollWidth,
                         height: resumeElement.scrollHeight,
-                        logging: false, // Reduce console output
+                        logging: false,
+                        foreignObjectRendering: false, // Disable for better compatibility
                         ignoreElements: (element) => {
                             // Skip problematic elements
                             return element.tagName === 'SCRIPT' || 
                                    element.tagName === 'STYLE' || 
-                                   element.hasAttribute('data-html2canvas-ignore');
+                                   element.hasAttribute('data-html2canvas-ignore') ||
+                                   element.classList.contains('no-export');
                         },
                         onclone: (clonedDoc) => {
-                            // Apply safe styling to cloned document
+                            // Apply comprehensive safe styling to cloned document
                             const clonedStyle = clonedDoc.createElement('style');
                             clonedStyle.textContent = `
+                                /* Reset all color-related properties to safe values */
                                 * { 
                                     color: inherit !important; 
-                                    background-color: inherit !important;
+                                    background-color: transparent !important;
+                                    border-color: #e5e7eb !important;
+                                    outline-color: transparent !important;
                                 }
+                                
                                 body { 
-                                    background: white !important; 
-                                    color: #333 !important; 
+                                    background: #ffffff !important; 
+                                    color: #1a1a1a !important; 
                                     font-family: ${resume.settings?.fontFamily || 'Arial, sans-serif'} !important;
                                 }
+                                
+                                /* Force heading colors */
                                 h1, h2, h3, h4, h5, h6 { 
-                                    color: ${resume.settings?.primaryColor || '#1a1a1a'} !important; 
+                                    color: ${safePrimaryColor} !important; 
+                                    background: transparent !important;
                                 }
+                                
+                                /* Remove all modern CSS color functions */
+                                [style*="oklch"], [style*="hsl"], [style*="rgb"], [style*="var("] {
+                                    color: ${safePrimaryColor} !important;
+                                    background-color: transparent !important;
+                                }
+                                
+                                /* Ensure gradients are replaced with solid colors */
+                                [class*="gradient"] {
+                                    background: ${safePrimaryColor} !important;
+                                    background-image: none !important;
+                                }
+                                
+                                /* Safe border and text colors */
+                                .border { border-color: #e5e7eb !important; }
+                                .text-gray-600 { color: #6b7280 !important; }
+                                .text-gray-700 { color: #374151 !important; }
+                                .text-gray-800 { color: #1f2937 !important; }
+                                .text-gray-900 { color: #111827 !important; }
                             `;
                             clonedDoc.head.appendChild(clonedStyle);
+                            
+                            // Remove any remaining problematic styles
+                            const allElements = clonedDoc.querySelectorAll('*');
+                            allElements.forEach(el => {
+                                const style = el.getAttribute('style');
+                                if (style && (style.includes('oklch') || style.includes('hsl(') || style.includes('var('))) {
+                                    // Remove problematic inline styles
+                                    el.setAttribute('style', style
+                                        .replace(/color:\s*oklch[^;]+;?/g, `color: ${safePrimaryColor};`)
+                                        .replace(/color:\s*hsl[^;]+;?/g, `color: ${safePrimaryColor};`)
+                                        .replace(/color:\s*var\([^)]+\);?/g, `color: ${safePrimaryColor};`)
+                                        .replace(/background[^:]*:\s*oklch[^;]+;?/g, 'background: transparent;')
+                                        .replace(/background[^:]*:\s*hsl[^;]+;?/g, 'background: transparent;')
+                                        .replace(/background[^:]*:\s*var\([^)]+\);?/g, 'background: transparent;')
+                                    );
+                                }
+                            });
                         }
                     });
                 } catch (canvasError) {
                     console.warn('HTML2Canvas with advanced options failed, trying simplified approach:', canvasError);
                     
-                    // Fallback with simpler options
-                    canvas = await html2canvas(resumeElement, {
-                        scale: 1.5,
-                        backgroundColor: '#ffffff',
-                        logging: false,
-                    });
+                    // Try with minimal configuration to avoid color issues
+                    try {
+                        canvas = await html2canvas(resumeElement, {
+                            scale: 1.5,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            useCORS: false,
+                            allowTaint: false,
+                            foreignObjectRendering: false,
+                            onclone: (clonedDoc) => {
+                                // Apply minimal safe styling
+                                const safeStyle = clonedDoc.createElement('style');
+                                safeStyle.textContent = `
+                                    * { 
+                                        color: #333 !important; 
+                                        background-color: transparent !important;
+                                    }
+                                    body { 
+                                        background: #ffffff !important; 
+                                        color: #333 !important; 
+                                    }
+                                    h1, h2, h3, h4, h5, h6 { 
+                                        color: #1a1a1a !important; 
+                                    }
+                                `;
+                                clonedDoc.head.appendChild(safeStyle);
+                            }
+                        });
+                    } catch (simplifiedError) {
+                        console.error('Even simplified html2canvas failed:', simplifiedError);
+                        throw new Error('PDF export failed due to color format compatibility issues. Please try a different export format or contact support.');
+                    }
                 } finally {
-                    // Clean up temporary style
+                    // Clean up temporary style and restore original styles
                     document.head.removeChild(tempStyle);
+                    restoreStyles();
                 }
 
                 setExportProgress(70);
@@ -187,15 +374,43 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
         } catch (error) {
             console.error('Export failed:', error);
             
-            // Provide user-friendly error messages
+            // Provide detailed user-friendly error messages
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             
-            if (errorMessage.includes('oklch') || errorMessage.includes('color function')) {
-                alert('PDF export failed due to unsupported color formats. Please try again or use a different export format.');
+            if (errorMessage.includes('oklch') || errorMessage.includes('color function') || errorMessage.includes('color format')) {
+                alert(`PDF export failed due to unsupported color formats in your resume template. 
+
+This can happen when:
+• Your browser doesn't support certain CSS color functions
+• The template uses advanced color formats (oklch, lab, etc.)
+
+Solutions:
+1. Try switching to a different template
+2. Export as HTML format instead
+3. Update your browser to the latest version
+
+Would you like to try exporting as HTML instead?`);
             } else if (errorMessage.includes('Resume preview element not found')) {
                 alert('Could not find the resume preview. Please make sure the resume is loaded and try again.');
+            } else if (errorMessage.includes('html2canvas')) {
+                alert(`PDF export failed due to rendering issues. 
+
+This might be caused by:
+• Complex CSS styles that can't be converted to PDF
+• Browser compatibility issues
+• Large resume content
+
+Please try:
+1. Exporting as HTML format
+2. Simplifying your resume template
+3. Using a different browser`);
             } else {
-                alert(`Export failed: ${errorMessage}. Please try again or contact support if the issue persists.`);
+                alert(`Export failed: ${errorMessage}
+
+If this issue persists, please:
+1. Try a different export format (HTML or TXT)
+2. Refresh the page and try again
+3. Contact support if the problem continues`);
             }
         } finally {
             setIsExporting(false);

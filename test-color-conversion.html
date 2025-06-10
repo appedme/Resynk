@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Color Conversion Test</title>
+</head>
+<body>
+    <h1>Testing Color Conversion</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        // Test the color conversion function
+        const convertToHex = (color) => {
+            if (!color) return '#000000';
+            
+            // If already hex, return as-is
+            if (color.startsWith('#')) return color;
+            
+            // Create temporary element to get computed color
+            const tempEl = document.createElement('div');
+            tempEl.style.color = color;
+            document.body.appendChild(tempEl);
+            const computedColor = window.getComputedStyle(tempEl).color;
+            document.body.removeChild(tempEl);
+            
+            // Convert rgb to hex
+            const rgbMatch = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            if (rgbMatch) {
+                const r = parseInt(rgbMatch[1]);
+                const g = parseInt(rgbMatch[2]);
+                const b = parseInt(rgbMatch[3]);
+                return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+            }
+            
+            // Fallback to black if conversion fails
+            return '#000000';
+        };
+
+        // Test various color formats
+        const testColors = [
+            'oklch(0.5 0.2 180)',
+            'hsl(180, 50%, 50%)',
+            'rgb(100, 150, 200)',
+            '#ff0000',
+            'blue',
+            'red',
+            'var(--primary-color)'
+        ];
+
+        const resultsDiv = document.getElementById('test-results');
+        
+        testColors.forEach(color => {
+            const converted = convertToHex(color);
+            const div = document.createElement('div');
+            div.innerHTML = `<strong>${color}</strong> → <span style="color: ${converted}">${converted}</span>`;
+            resultsDiv.appendChild(div);
+        });
+    </script>
+</body>
+</html>
