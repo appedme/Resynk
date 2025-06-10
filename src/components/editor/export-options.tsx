@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { convertEditorResumeToResumeData, type EditorResume } from "@/lib/data-converter";
+import type { ResumeData } from "@/types/resume";
 
 interface ExportOptionsProps {
     resume: EditorResume;
@@ -104,7 +105,8 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 URL.revokeObjectURL(url);
 
             } else if (exportFormat === 'txt') {
-                const textContent = generateTextResume(resume);
+                const resumeData = convertEditorResumeToResumeData(resume);
+                const textContent = generateTextResume(resumeData);
                 const blob = new Blob([textContent], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
