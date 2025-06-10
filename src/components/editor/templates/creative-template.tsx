@@ -10,7 +10,7 @@ interface CreativeTemplateProps {
     fontFamily?: string;
     primaryColor?: string;
     secondaryColor?: string;
-    spacing?: 'compact' | 'normal' | 'spacious';
+    spacing?: 'compact' | 'normal' | 'relaxed';
     pageMargins?: 'narrow' | 'normal' | 'wide';
   };
 }
@@ -36,7 +36,7 @@ export function CreativeTemplate({ resume, settings = {} }: CreativeTemplateProp
   // Apply settings with defaults
   const primaryColor = settings.primaryColor || '#7c3aed'; // violet-600
   const secondaryColor = settings.secondaryColor || '#a855f7'; // purple-500
-  const spacingClass = settings.spacing === 'compact' ? 'space-y-4' : settings.spacing === 'spacious' ? 'space-y-8' : 'space-y-6';
+  const spacingClass = settings.spacing === 'compact' ? 'space-y-4' : settings.spacing === 'relaxed' ? 'space-y-8' : 'space-y-6';
   const marginsClass = settings.pageMargins === 'narrow' ? 'p-4' : settings.pageMargins === 'wide' ? 'p-12' : 'p-8';
 
   return (

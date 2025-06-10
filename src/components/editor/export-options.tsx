@@ -46,15 +46,79 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
 
                 setExportProgress(40);
 
-                // Convert HTML to canvas
-                const canvas = await html2canvas(resumeElement, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    width: resumeElement.scrollWidth,
-                    height: resumeElement.scrollHeight,
-                });
+                // Create a temporary style element to override problematic CSS for PDF export
+                const tempStyle = document.createElement('style');
+                tempStyle.textContent = `
+                    /* Override CSS custom properties with hex values for PDF export */
+                    [data-resume-preview] * {
+                        --background: #ffffff !important;
+                        --foreground: #1a1a1a !important;
+                        --primary: #1a1a1a !important;
+                        --secondary: #f5f5f5 !important;
+                        --muted: #f5f5f5 !important;
+                        --muted-foreground: #6b7280 !important;
+                        --border: #e5e7eb !important;
+                        --ring: #9ca3af !important;
+                    }
+                    /* Force hex colors for elements that might use oklch */
+                    [data-resume-preview] h1, 
+                    [data-resume-preview] h2, 
+                    [data-resume-preview] h3 {
+                        color: ${resume.settings?.primaryColor || '#1a1a1a'} !important;
+                    }
+                `;
+                document.head.appendChild(tempStyle);
+
+                let canvas;
+                try {
+                    // Convert HTML to canvas with improved error handling
+                    canvas = await html2canvas(resumeElement, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        width: resumeElement.scrollWidth,
+                        height: resumeElement.scrollHeight,
+                        logging: false, // Reduce console output
+                        ignoreElements: (element) => {
+                            // Skip problematic elements
+                            return element.tagName === 'SCRIPT' || 
+                                   element.tagName === 'STYLE' || 
+                                   element.hasAttribute('data-html2canvas-ignore');
+                        },
+                        onclone: (clonedDoc) => {
+                            // Apply safe styling to cloned document
+                            const clonedStyle = clonedDoc.createElement('style');
+                            clonedStyle.textContent = `
+                                * { 
+                                    color: inherit !important; 
+                                    background-color: inherit !important;
+                                }
+                                body { 
+                                    background: white !important; 
+                                    color: #333 !important; 
+                                    font-family: ${resume.settings?.fontFamily || 'Arial, sans-serif'} !important;
+                                }
+                                h1, h2, h3, h4, h5, h6 { 
+                                    color: ${resume.settings?.primaryColor || '#1a1a1a'} !important; 
+                                }
+                            `;
+                            clonedDoc.head.appendChild(clonedStyle);
+                        }
+                    });
+                } catch (canvasError) {
+                    console.warn('HTML2Canvas with advanced options failed, trying simplified approach:', canvasError);
+                    
+                    // Fallback with simpler options
+                    canvas = await html2canvas(resumeElement, {
+                        scale: 1.5,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                    });
+                } finally {
+                    // Clean up temporary style
+                    document.head.removeChild(tempStyle);
+                }
 
                 setExportProgress(70);
 
@@ -122,6 +186,17 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
 
         } catch (error) {
             console.error('Export failed:', error);
+            
+            // Provide user-friendly error messages
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            
+            if (errorMessage.includes('oklch') || errorMessage.includes('color function')) {
+                alert('PDF export failed due to unsupported color formats. Please try again or use a different export format.');
+            } else if (errorMessage.includes('Resume preview element not found')) {
+                alert('Could not find the resume preview. Please make sure the resume is loaded and try again.');
+            } else {
+                alert(`Export failed: ${errorMessage}. Please try again or contact support if the issue persists.`);
+            }
         } finally {
             setIsExporting(false);
             setExportProgress(0);

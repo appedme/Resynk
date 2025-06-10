@@ -10,7 +10,7 @@ interface ProfessionalTemplateProps {
     fontFamily?: string;
     primaryColor?: string;
     secondaryColor?: string;
-    spacing?: 'compact' | 'normal' | 'spacious';
+    spacing?: 'compact' | 'normal' | 'relaxed';
     pageMargins?: 'narrow' | 'normal' | 'wide';
   };
 }
@@ -36,7 +36,7 @@ export function ProfessionalTemplate({ resume, settings = {} }: ProfessionalTemp
   // Apply settings with defaults
   const primaryColor = settings.primaryColor || '#1f2937'; // gray-800
   const secondaryColor = settings.secondaryColor || '#6b7280'; // gray-500
-  const spacingClass = settings.spacing === 'compact' ? 'space-y-4' : settings.spacing === 'spacious' ? 'space-y-8' : 'space-y-6';
+  const spacingClass = settings.spacing === 'compact' ? 'space-y-4' : settings.spacing === 'relaxed' ? 'space-y-8' : 'space-y-6';
   const marginsClass = settings.pageMargins === 'narrow' ? 'p-4' : settings.pageMargins === 'wide' ? 'p-12' : 'p-8';
 
   return (

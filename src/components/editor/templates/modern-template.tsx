@@ -37,7 +37,7 @@ export function ModernTemplate({ resume, settings }: ModernTemplateProps) {
   // Apply settings with defaults
   const primaryColor = settings?.primaryColor || '#2563eb'; // blue-600
   const secondaryColor = settings?.secondaryColor || '#374151'; // gray-700
-  const spacingClass = settings?.spacing === 'compact' ? 'space-y-4' : settings?.spacing === 'spacious' ? 'space-y-8' : 'space-y-6';
+  const spacingClass = settings?.spacing === 'compact' ? 'space-y-4' : settings?.spacing === 'relaxed' ? 'space-y-8' : 'space-y-6';
   const marginsClass = settings?.pageMargins === 'narrow' ? 'p-4' : settings?.pageMargins === 'wide' ? 'p-12' : 'p-6';
 
   return (
