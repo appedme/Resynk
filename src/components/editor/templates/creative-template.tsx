@@ -5,9 +5,17 @@ import type { ResumeData, PersonalInfo } from "@/types/resume";
 interface CreativeTemplateProps {
   resume: ResumeData;
   mode: 'desktop' | 'mobile';
+  settings?: {
+    fontSize?: number;
+    fontFamily?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    spacing?: 'compact' | 'normal' | 'spacious';
+    pageMargins?: 'narrow' | 'normal' | 'wide';
+  };
 }
 
-export function CreativeTemplate({ resume }: CreativeTemplateProps) {
+export function CreativeTemplate({ resume, settings = {} }: CreativeTemplateProps) {
   // Add null checks and fallbacks
   if (!resume) {
     return <div className="p-8">Loading...</div>;
@@ -25,26 +33,22 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
     custom_sections = []
   } = resume;
 
-  // Default styling since settings are not part of ResumeData
-  const primaryColor = '#7c3aed'; // violet-600
-  const spacing = 'space-y-6';
-  const margins = 'p-8';
-
-  // Calculate margins based on settings
-  const getMargins = () => {
-    return `${margins} bg-gradient-to-br from-gray-50 to-white`;
-  };
+  // Apply settings with defaults
+  const primaryColor = settings.primaryColor || '#7c3aed'; // violet-600
+  const secondaryColor = settings.secondaryColor || '#a855f7'; // purple-500
+  const spacingClass = settings.spacing === 'compact' ? 'space-y-4' : settings.spacing === 'spacious' ? 'space-y-8' : 'space-y-6';
+  const marginsClass = settings.pageMargins === 'narrow' ? 'p-4' : settings.pageMargins === 'wide' ? 'p-12' : 'p-8';
 
   return (
-    <div className={getMargins()} data-testid="resume-template">
+    <div className={`${marginsClass} bg-gradient-to-br from-gray-50 to-white`} data-testid="resume-template" style={{ fontFamily: settings.fontFamily }}>
       {/* Header Section with Creative Styling */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 mb-8">
+      <div className="relative overflow-hidden rounded-2xl text-white p-8 mb-8" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}>
         <div className="relative z-10">
           <h1 className="text-4xl font-bold mb-3">
             {personal.full_name || 'Your Name'}
           </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-purple-100 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
             <div>📧 {personal.email}</div>
             {personal.phone && <div>📱 {personal.phone}</div>}
             {personal.location && <div>📍 {personal.location}</div>}
@@ -66,20 +70,20 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
       </div>
 
-      <div className={spacing}>
+      <div className={spacingClass}>
         {/* Experience Section */}
         {experience.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-2xl font-bold mb-6 flex items-center" style={{ color: primaryColor }}>
-              <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mr-3">
+              <span className="w-8 h-8 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
                 💼
               </span>
               Experience
             </h2>
             <div className="space-y-6">
               {experience.map((exp, index) => (
-                <div key={exp.id || index} className="relative pl-8 border-l-2 border-purple-200">
-                  <div className="absolute w-4 h-4 bg-purple-600 rounded-full -left-2 top-1"></div>
+                <div key={exp.id || index} className="relative pl-8 border-l-2" style={{ borderColor: `${primaryColor}40` }}>
+                  <div className="absolute w-4 h-4 rounded-full -left-2 top-1" style={{ backgroundColor: primaryColor }}></div>
                   <div className="mb-3">
                     <h3 className="text-xl font-bold text-gray-900">{exp.position}</h3>
                     <p className="text-lg font-medium" style={{ color: primaryColor }}>{exp.company}</p>

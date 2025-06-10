@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Save,
-  Download,
   Share2,
   Settings
 } from "lucide-react";
@@ -16,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResumeEditorSidebar } from "@/components/editor/resume-editor-sidebar";
 import { ResumePreview } from "@/components/editor/resume-preview";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
+import { ExportOptions } from "@/components/editor/export-options";
 
 // Editor-specific Resume interface for simpler usage
 interface Resume {
@@ -89,6 +89,8 @@ interface Resume {
     id: string;
     title: string;
     content: string;
+    type: 'text' | 'list' | 'table';
+    order: number;
   }>;
   settings: {
     fontSize: number;
@@ -121,6 +123,10 @@ export default function EditorPage({ params }: EditorPageProps) {
   const [isFullPreview, setIsFullPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Undo/Redo functionality
+  const [history, setHistory] = useState<Resume[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   // Initialize or load resume
   useEffect(() => {
@@ -197,7 +203,154 @@ export default function EditorPage({ params }: EditorPageProps) {
   };
 
   const handleResumeChange = (updatedResume: Resume) => {
+    // Add to history for undo/redo
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(currentResume!);
+      return newHistory;
+    });
+    setHistoryIndex(prev => prev + 1);
+
     setCurrentResume(updatedResume);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(prev => prev - 1);
+      setCurrentResume(history[historyIndex - 1]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(prev => prev + 1);
+      setCurrentResume(history[historyIndex + 1]);
+    }
+  };
+
+  // Share functionality
+  const handleShare = async () => {
+    if (!currentResume) return;
+
+    try {
+      const shareUrl = `${window.location.origin}/resume/shared/${currentResume.id || 'preview'}`;
+
+      if (navigator.share) {
+        // Use native share API if available
+        await navigator.share({
+          title: `${currentResume.title} - Resume`,
+          text: `Check out my resume: ${currentResume.title}`,
+          url: shareUrl,
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Share link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Fallback to copying URL
+      try {
+        const shareUrl = `${window.location.origin}/resume/shared/${currentResume.id || 'preview'}`;
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Share link copied to clipboard!');
+      } catch (clipboardError) {
+        console.error('Clipboard error:', clipboardError);
+        alert('Unable to share or copy link. Please try again.');
+      }
+    }
+  };
+
+  const handleTemplateChange = (newTemplate: 'modern' | 'professional' | 'creative') => {
+    if (currentResume) {
+      const updatedResume = {
+        ...currentResume,
+        template: newTemplate,
+        metadata: {
+          ...currentResume.metadata,
+          lastModified: new Date(),
+        }
+      };
+      handleResumeChange(updatedResume);
+    }
+  };
+
+  const handleFontSizeChange = (size: number) => {
+    if (currentResume) {
+      const updatedResume = {
+        ...currentResume,
+        settings: {
+          ...currentResume.settings,
+          fontSize: size,
+        }
+      };
+      handleResumeChange(updatedResume);
+    }
+  };
+
+  const handleFontFamilyChange = (family: string) => {
+    if (currentResume) {
+      const updatedResume = {
+        ...currentResume,
+        settings: {
+          ...currentResume.settings,
+          fontFamily: family,
+        }
+      };
+      handleResumeChange(updatedResume);
+    }
+  };
+
+  const handlePrimaryColorChange = (color: string) => {
+    if (currentResume) {
+      const updatedResume = {
+        ...currentResume,
+        settings: {
+          ...currentResume.settings,
+          primaryColor: color,
+        }
+      };
+      handleResumeChange(updatedResume);
+    }
+  };
+
+  const handleSecondaryColorChange = (color: string) => {
+    if (currentResume) {
+      const updatedResume = {
+        ...currentResume,
+        settings: {
+          ...currentResume.settings,
+          secondaryColor: color,
+        }
+      };
+      handleResumeChange(updatedResume);
+    }
+  };
+
+  const handleSpacingChange = (spacing: 'compact' | 'normal' | 'relaxed') => {
+    if (currentResume) {
+      const updatedResume = {
+        ...currentResume,
+        settings: {
+          ...currentResume.settings,
+          spacing: spacing,
+        }
+      };
+      handleResumeChange(updatedResume);
+    }
+  };
+
+  const handlePageMarginsChange = (margins: 'narrow' | 'normal' | 'wide') => {
+    if (currentResume) {
+      const updatedResume = {
+        ...currentResume,
+        settings: {
+          ...currentResume.settings,
+          pageMargins: margins,
+        }
+      };
+      handleResumeChange(updatedResume);
+    }
   };
 
   const handleZoomIn = () => {
@@ -259,14 +412,11 @@ export default function EditorPage({ params }: EditorPageProps) {
               <Save className="w-4 h-4 mr-1" />
               {isSaving ? 'Saving...' : 'Save'}
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="w-4 h-4 mr-1" />
               Share
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-1" />
-              Export
-            </Button>
+            <ExportOptions resume={currentResume} />
             <Button variant="outline" size="sm">
               <Settings className="w-4 h-4" />
             </Button>
@@ -276,8 +426,8 @@ export default function EditorPage({ params }: EditorPageProps) {
 
       {/* Editor Toolbar */}
       <EditorToolbar
-        onUndo={() => console.log('Undo')}
-        onRedo={() => console.log('Redo')}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         zoom={zoom}
@@ -285,6 +435,20 @@ export default function EditorPage({ params }: EditorPageProps) {
         onPreviewModeChange={setPreviewMode}
         onFullPreview={() => setIsFullPreview(!isFullPreview)}
         isFullPreview={isFullPreview}
+        template={currentResume.template}
+        onTemplateChange={handleTemplateChange}
+        fontSize={currentResume.settings.fontSize}
+        fontFamily={currentResume.settings.fontFamily}
+        onFontSizeChange={handleFontSizeChange}
+        onFontFamilyChange={handleFontFamilyChange}
+        primaryColor={currentResume.settings.primaryColor}
+        secondaryColor={currentResume.settings.secondaryColor}
+        onPrimaryColorChange={handlePrimaryColorChange}
+        onSecondaryColorChange={handleSecondaryColorChange}
+        spacing={currentResume.settings.spacing}
+        pageMargins={currentResume.settings.pageMargins}
+        onSpacingChange={handleSpacingChange}
+        onPageMarginsChange={handlePageMarginsChange}
       />
 
       {/* Main Editor Area */}

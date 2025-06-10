@@ -6,41 +6,49 @@ import type { ResumeData, PersonalInfo } from "@/types/resume";
 interface ModernTemplateProps {
   resume: ResumeData;
   mode: 'desktop' | 'mobile';
+  settings?: {
+    fontSize?: number;
+    fontFamily?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    spacing?: 'compact' | 'normal' | 'relaxed';
+    pageMargins?: 'narrow' | 'normal' | 'wide';
+  };
 }
 
-export function ModernTemplate({ resume }: ModernTemplateProps) {
+export function ModernTemplate({ resume, settings }: ModernTemplateProps) {
   // Add null checks and fallbacks
   if (!resume) {
     return <div className="p-8">Loading...</div>;
   }
 
-  const { 
-    personal = {} as PersonalInfo, 
-    experience = [], 
-    education = [], 
-    skills = [], 
-    projects = [], 
+  const {
+    personal = {} as PersonalInfo,
+    experience = [],
+    education = [],
+    skills = [],
+    projects = [],
     achievements = [],
-    certifications = [], 
-    languages = [], 
-    custom_sections = [] 
+    certifications = [],
+    languages = [],
+    custom_sections = []
   } = resume;
 
-  // Default styling since settings are not part of ResumeData
-  const primaryColor = '#2563eb'; // blue-600
-  const secondaryColor = '#374151'; // gray-700
-  const spacing = 'space-y-6';
-  const margins = 'p-6'; // Reduced from p-8 to p-6
+  // Apply settings with defaults
+  const primaryColor = settings?.primaryColor || '#2563eb'; // blue-600
+  const secondaryColor = settings?.secondaryColor || '#374151'; // gray-700
+  const spacingClass = settings?.spacing === 'compact' ? 'space-y-4' : settings?.spacing === 'spacious' ? 'space-y-8' : 'space-y-6';
+  const marginsClass = settings?.pageMargins === 'narrow' ? 'p-4' : settings?.pageMargins === 'wide' ? 'p-12' : 'p-6';
 
   return (
-    <div className={`max-w-none mx-auto bg-white shadow-lg ${margins} ${spacing}`} data-testid="resume-template">
+    <div className={`max-w-none mx-auto bg-white shadow-lg ${marginsClass} ${spacingClass}`} data-testid="resume-template" style={{ fontFamily: settings?.fontFamily }}>
       {/* Header Section */}
       <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold mb-2" style={{ color: primaryColor }}>
           {personal.full_name || 'Your Name'}
         </h1>
 
-        <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mb-4">
+        <div className="flex flex-wrap justify-center gap-4 text-sm mb-4" style={{ color: secondaryColor }}>
           {personal.email && (
             <div className="flex items-center gap-1">
               <Mail className="w-4 h-4" style={{ color: primaryColor }} />

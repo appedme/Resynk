@@ -5,9 +5,17 @@ import type { ResumeData, PersonalInfo } from "@/types/resume";
 interface ProfessionalTemplateProps {
   resume: ResumeData;
   mode: 'desktop' | 'mobile';
+  settings?: {
+    fontSize?: number;
+    fontFamily?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    spacing?: 'compact' | 'normal' | 'spacious';
+    pageMargins?: 'narrow' | 'normal' | 'wide';
+  };
 }
 
-export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
+export function ProfessionalTemplate({ resume, settings = {} }: ProfessionalTemplateProps) {
   // Add null checks and fallbacks
   if (!resume) {
     return <div className="p-8">Loading...</div>;
@@ -25,24 +33,21 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
     custom_sections = []
   } = resume;
 
-  // Default styling since settings are not part of ResumeData
-  const spacing = 'space-y-6';
-  const margins = 'p-8';
-
-  // Calculate margins based on settings
-  const getMargins = () => {
-    return margins;
-  };
+  // Apply settings with defaults
+  const primaryColor = settings.primaryColor || '#1f2937'; // gray-800
+  const secondaryColor = settings.secondaryColor || '#6b7280'; // gray-500
+  const spacingClass = settings.spacing === 'compact' ? 'space-y-4' : settings.spacing === 'spacious' ? 'space-y-8' : 'space-y-6';
+  const marginsClass = settings.pageMargins === 'narrow' ? 'p-4' : settings.pageMargins === 'wide' ? 'p-12' : 'p-8';
 
   return (
-    <div className={getMargins()} data-testid="resume-template">
+    <div className={marginsClass} data-testid="resume-template" style={{ fontFamily: settings.fontFamily }}>
       {/* Header Section */}
-      <div className="border-b-2 border-gray-300 pb-6 mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+      <div className="border-b-2 pb-6 mb-8" style={{ borderColor: secondaryColor }}>
+        <h1 className="text-4xl font-bold mb-2" style={{ color: primaryColor }}>
           {personal.full_name || 'Your Name'}
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm" style={{ color: secondaryColor }}>
           <div>Email: {personal.email}</div>
           {personal.phone && <div>Phone: {personal.phone}</div>}
           {personal.location && <div>Location: {personal.location}</div>}
@@ -60,20 +65,20 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
         )}
       </div>
 
-      <div className={spacing}>
+      <div className={spacingClass}>
         {/* Experience Section */}
         {experience.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 uppercase tracking-wide">
+            <h2 className="text-2xl font-bold mb-4 uppercase tracking-wide" style={{ color: primaryColor }}>
               Professional Experience
             </h2>
             <div className="space-y-6">
               {experience.map((exp, index) => (
-                <div key={exp.id || index} className="border-l-4 border-gray-300 pl-4">
+                <div key={exp.id || index} className="border-l-4 pl-4" style={{ borderColor: secondaryColor }}>
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">{exp.position}</h3>
-                      <p className="text-lg text-gray-700 font-medium">{exp.company}</p>
+                      <h3 className="text-xl font-bold" style={{ color: primaryColor }}>{exp.position}</h3>
+                      <p className="text-lg font-medium" style={{ color: secondaryColor }}>{exp.company}</p>
                     </div>
                     <div className="text-right text-sm text-gray-600">
                       <p className="font-medium">{exp.start_date} - {exp.is_current ? 'Present' : exp.end_date || 'Present'}</p>

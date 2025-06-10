@@ -30,15 +30,16 @@ export function ResumePreview({ resume, zoom, mode, template = 'modern' }: Resum
 
   const renderTemplate = () => {
     const templateToUse = resume?.template || template;
-    
+    const settings = resume?.settings || {};
+
     switch (templateToUse) {
       case 'professional':
-        return <ProfessionalTemplate resume={resumeData} mode={mode} />;
+        return <ProfessionalTemplate resume={resumeData} mode={mode} settings={settings} />;
       case 'creative':
-        return <CreativeTemplate resume={resumeData} mode={mode} />;
+        return <CreativeTemplate resume={resumeData} mode={mode} settings={settings} />;
       case 'modern':
       default:
-        return <ModernTemplate resume={resumeData} mode={mode} />;
+        return <ModernTemplate resume={resumeData} mode={mode} settings={settings} />;
     }
   };
 
