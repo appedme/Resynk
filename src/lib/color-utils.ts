@@ -48,8 +48,8 @@ export class ColorUtils {
 
                     return chroma.hsl(hue, saturation, l).hex();
                 }
-            } catch (error) {
-                console.warn('Failed to parse oklch color:', color, error);
+            } catch {
+                console.warn('Failed to parse oklch color:', color);
             }
             return fallback;
         }
@@ -60,55 +60,37 @@ export class ColorUtils {
                 // Extract color() values
                 const colorMatch = color.match(/color\(\s*([^)]+)\s*\)/);
                 if (colorMatch) {
-                    const colorContent = colorMatch[1].trim();
-
-                    // Handle different color spaces
-                    if (colorContent.startsWith('srgb')) {
-                        const values = colorContent.replace('srgb', '').trim().split(/[\s,]+/).filter(v => v.trim());
-                        const r = Math.round((parseFloat(values[0]) || 0) * 255);
-                        const g = Math.round((parseFloat(values[1]) || 0) * 255);
-                        const b = Math.round((parseFloat(values[2]) || 0) * 255);
-                        return chroma.rgb(r, g, b).hex();
+                  const colorContent = colorMatch[1].trim();
+                  // Try to match known color spaces
+                  let values = colorContent.split(/[\s,]+/).filter(v => v.trim());
+                  // Remove color space name if present
+                  if (['srgb','display-p3','rec2020','a98-rgb','prophoto-rgb','xyz'].some(space => values[0] === space)) {
+                    values = values.slice(1);
+                  }
+                  // Parse up to 4 values (r,g,b,a)
+                  const r = Math.round((parseFloat(values[0]) || 0) * 255);
+                  const g = Math.round((parseFloat(values[1]) || 0) * 255);
+                  const b = Math.round((parseFloat(values[2]) || 0) * 255);
+                  // If alpha present and < 1, blend with white
+                  let hex = chroma.rgb(r, g, b).hex();
+                  if (values[3] && !isNaN(parseFloat(values[3]))) {
+                    const a = parseFloat(values[3]);
+                    if (a < 1) {
+                      const blended = chroma.mix('#fff', hex, a, 'rgb');
+                      hex = blended.hex();
                     }
-
-                    // Handle display-p3 and other color spaces - convert to approximate sRGB
-                    if (colorContent.startsWith('display-p3')) {
-                        const values = colorContent.replace('display-p3', '').trim().split(/[\s,]+/).filter(v => v.trim());
-                        const r = Math.round((parseFloat(values[0]) || 0) * 255);
-                        const g = Math.round((parseFloat(values[1]) || 0) * 255);
-                        const b = Math.round((parseFloat(values[2]) || 0) * 255);
-                        return chroma.rgb(r, g, b).hex();
-                    }
-
-                    // Handle rec2020 color space (basic approximation)
-                    if (colorContent.startsWith('rec2020')) {
-                        const values = colorContent.replace('rec2020', '').trim().split(/[\s,]+/).filter(v => v.trim());
-                        const r = Math.round((parseFloat(values[0]) || 0) * 255);
-                        const g = Math.round((parseFloat(values[1]) || 0) * 255);
-                        const b = Math.round((parseFloat(values[2]) || 0) * 255);
-                        return chroma.rgb(r, g, b).hex();
-                    }
-
-                    // Fallback: try to parse as space-separated RGB values
-                    const values = colorContent.split(/[\s,]+/).filter(v => v.trim() && !isNaN(parseFloat(v)));
-                    if (values.length >= 3) {
-                        const r = Math.round((parseFloat(values[0]) || 0) * 255);
-                        const g = Math.round((parseFloat(values[1]) || 0) * 255);
-                        const b = Math.round((parseFloat(values[2]) || 0) * 255);
-                        return chroma.rgb(r, g, b).hex();
-                    }
+                  }
+                  return hex;
                 }
-            } catch (error) {
-                console.warn('Failed to parse color() function:', color, error);
+            } catch {
+                console.warn('Failed to parse color() function:', color);
             }
-            return fallback;
         }
 
         // Try to parse with chroma-js first
         try {
-            return chroma(color).hex();
-        } catch (error) {
-            console.warn('Failed to parse color:', color, error);
+            return chroma(color).hex();            } catch {
+            console.warn('Failed to parse color:', color);
 
             // Try alternative parsing methods as fallback
             try {
@@ -133,8 +115,8 @@ export class ColorUtils {
                         return chroma.rgb(r, g, b).hex();
                     }
                 }
-            } catch (secondError) {
-                console.warn('Alternative parsing also failed:', secondError);
+            } catch {
+                console.warn('Alternative parsing also failed:', color);
             }
 
             return fallback;
