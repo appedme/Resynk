@@ -68,7 +68,7 @@ export function HeroSection() {
 
                     {/* CTA Buttons */}
                     <div className={`flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 transition-all duration-1000 delay-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                        <Link href="/editor">
+                        <Link href="/handler/sign-up">
                             <button className="group bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2">
                                 Start Building Free
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

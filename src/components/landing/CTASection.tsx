@@ -98,7 +98,7 @@ export function CTASection() {
 
                     {/* CTA Buttons */}
                     <div className={`flex flex-col sm:flex-row gap-6 justify-center items-center mb-12 transition-all duration-1000 delay-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                        <Link href="/editor">
+                        <Link href="/handler/sign-up">
                             <button className="group bg-white text-blue-600 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-white/25 flex items-center gap-3 min-w-[280px] justify-center">
                                 Start Building Free
                                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />

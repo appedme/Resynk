@@ -75,7 +75,7 @@ export function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/editor" className="text-gray-400 hover:text-white transition-colors">
+                                <Link href="/handler/sign-up" className="text-gray-400 hover:text-white transition-colors">
                                     Resume Builder
                                 </Link>
                             </li>

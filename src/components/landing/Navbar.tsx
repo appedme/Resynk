@@ -3,11 +3,16 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X, Sparkles } from 'lucide-react';
+import { useUser } from '@stackframe/stack';
 
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+    const user = useUser();
+
+    const [isLoggedIn, setIsLoggedIn] = useState(user !== null);
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
@@ -36,18 +41,29 @@ export function Navbar() {
                             FAQ
                         </Link>
                         <div className="flex items-center space-x-4">
-                            <Link
-                                href="/editor"
-                                className="text-gray-600 hover:text-gray-900 transition-colors"
-                            >
-                                Sign In
-                            </Link>
-                            <Link
-                                href="/editor"
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-                            >
-                                Get Started
-                            </Link>
+                            {isLoggedIn ? (
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+                                >
+                                    <span>Dashboard</span>
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link
+                                        href="/handler/sign-in"
+                                        className="text-gray-600 hover:text-gray-900 transition-colors"
+                                    >
+                                        Sign In
+                                    </Link>
+                                    <Link
+                                        href="/handler/sign-up"
+                                        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                                    >
+                                        Get Started
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -94,15 +110,15 @@ export function Navbar() {
                             </Link>
                             <div className="border-t border-gray-200 pt-4 mt-4">
                                 <Link
-                                    href="/editor"
+                                    href="/handler/sign-in"
                                     className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     Sign In
                                 </Link>
                                 <Link
-                                    href="/editor"
-                                    className="block mx-3 mt-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-center hover:shadow-lg transition-all duration-200"
+                                    href="/handler/sign-up"
+                                    className="block px-3 py-2 mt-2 text-center text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-md hover:shadow-lg transition-all duration-200"
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     Get Started
