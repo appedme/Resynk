@@ -14,7 +14,6 @@ import html2canvas from "html2canvas";
 import { convertEditorResumeToResumeData, type EditorResume } from "@/lib/data-converter";
 import type { ResumeData } from "@/types/resume";
 import { toast } from "sonner";
-import { ColorUtils } from "@/lib/color-utils";
 
 interface ExportOptionsProps {
     resume: EditorResume;
@@ -46,178 +45,61 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 if (!resumeElement) {
                     throw new Error('Resume preview element not found');
                 }
-
-                console.log('Resume element found:', resumeElement);
                 setExportProgress(40);
 
-                // Get safe colors using ColorUtils
-                const safePrimaryColor = ColorUtils.toHex(resume.settings?.primaryColor || '#2563eb');
-                const safeSecondaryColor = ColorUtils.toHex(resume.settings?.secondaryColor || '#6b7280');
+                // Create high-quality canvas with proper options for style preservation
+                const canvas = await html2canvas(resumeElement, {
+                    scale: 3, // High DPI for crisp text
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    removeContainer: false,
+                    foreignObjectRendering: true, // Enable for better CSS support
+                    imageTimeout: 15000,
+                    onclone: (clonedDoc, element) => {
+                        // Ensure all styles are preserved in the cloned document
+                        const allStyleSheets = Array.from(document.styleSheets);
+                        allStyleSheets.forEach(styleSheet => {
+                            try {
+                                const rules = Array.from(styleSheet.cssRules || styleSheet.rules || []);
+                                const style = clonedDoc.createElement('style');
+                                style.textContent = rules.map(rule => rule.cssText).join('\n');
+                                clonedDoc.head.appendChild(style);
+                            } catch (e) {
+                                // Handle cross-origin stylesheets
+                                console.warn('Could not clone stylesheet:', e);
+                            }
+                        });
 
-                console.log('Safe colors:', { primary: safePrimaryColor, secondary: safeSecondaryColor });
+                        // Force specific styling to ensure visibility
+                        element.style.color = resume.settings?.primaryColor || '#1a1a1a';
+                        element.style.backgroundColor = '#ffffff';
+                        element.style.fontFamily = resume.settings?.fontFamily || 'Arial, sans-serif';
+                        
+                        // Apply styles to all text elements
+                        const textElements = element.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, li, td, th');
+                        textElements.forEach((el: Element) => {
+                            const htmlEl = el as HTMLElement;
+                            if (!htmlEl.style.color || htmlEl.style.color === '') {
+                                htmlEl.style.color = '#1a1a1a';
+                            }
+                            htmlEl.style.fontFamily = resume.settings?.fontFamily || 'Arial, sans-serif';
+                        });
 
-                // Preprocess all CSS to replace OKLCH colors before PDF generation
-                ColorUtils.replaceOklchInStylesheets();
-                console.log('Preprocessed OKLCH colors in stylesheets');
-
-                // Create comprehensive PDF-safe styling
-                const pdfSafeCSS = ColorUtils.generatePDFSafeCSS(safePrimaryColor, safeSecondaryColor);
-
-                // Create style element
-                const tempStyle = document.createElement('style');
-                tempStyle.textContent = pdfSafeCSS;
-                document.head.appendChild(tempStyle);
-                console.log('PDF-safe CSS applied');
-
-                // Sanitize inline styles
-                const allElements = resumeElement.querySelectorAll('*');
-                const originalStyles = new Map();
-                let sanitizedCount = 0;
-
-                allElements.forEach((el, index) => {
-                    const htmlEl = el as HTMLElement;
-                    const style = htmlEl.getAttribute('style');
-                    originalStyles.set(index, style);
-
-                    if (style) {
-                        const sanitizedStyle = ColorUtils.sanitizeStyleColors(style, safePrimaryColor);
-                        if (sanitizedStyle !== style) {
-                            htmlEl.setAttribute('style', sanitizedStyle);
-                            sanitizedCount++;
-                        }
+                        // Ensure headings have proper styling
+                        const headings = element.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                        headings.forEach((heading: Element) => {
+                            const h = heading as HTMLElement;
+                            h.style.color = resume.settings?.primaryColor || '#1a1a1a';
+                            h.style.fontWeight = 'bold';
+                        });
                     }
                 });
 
-                console.log(`Sanitized ${sanitizedCount} inline styles out of ${allElements.length} elements`);
-
-                setExportProgress(60);
-
-                let canvas;
-                try {
-                    // Generate canvas with optimized settings
-                    canvas = await html2canvas(resumeElement, {
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: '#ffffff',
-                        width: resumeElement.scrollWidth,
-                        height: resumeElement.scrollHeight,
-                        logging: false,
-                        foreignObjectRendering: false,
-                        ignoreElements: (element) => {
-                            return element.tagName === 'SCRIPT' ||
-                                element.tagName === 'STYLE' ||
-                                element.hasAttribute('data-html2canvas-ignore');
-                        },
-                        onclone: (clonedDoc) => {
-                            // Apply safe styling to cloned document
-                            const clonedStyle = clonedDoc.createElement('style');
-                            clonedStyle.textContent = `
-                                body { 
-                                    background: #ffffff !important; 
-                                    color: #1a1a1a !important; 
-                                    font-family: ${resume.settings?.fontFamily || 'Arial, sans-serif'} !important;
-                                    -webkit-print-color-adjust: exact !important;
-                                    print-color-adjust: exact !important;
-                                }
-                                * { 
-                                    color: inherit !important; 
-                                    background-image: none !important;
-                                    border-color: #e5e7eb !important;
-                                    box-shadow: none !important;
-                                    text-shadow: none !important;
-                                }
-                                h1, h2, h3, h4, h5, h6 { 
-                                    color: ${safePrimaryColor} !important; 
-                                    font-weight: 700 !important;
-                                }
-                                .text-white, [style*="color: white"], [style*="color: #fff"] {
-                                    color: #1a1a1a !important;
-                                }
-                                [style*="gradient"], [class*="gradient"], [class*="bg-gradient"] {
-                                    background: #f8fafc !important;
-                                    background-image: none !important;
-                                    color: #1a1a1a !important;
-                                }
-                                svg {
-                                    display: inline-block !important;
-                                    vertical-align: middle !important;
-                                    margin-right: 6px !important;
-                                    width: 16px !important;
-                                    height: 16px !important;
-                                    fill: currentColor !important;
-                                }
-                                .flex.items-center {
-                                    display: flex !important;
-                                    align-items: center !important;
-                                    gap: 0.375rem !important;
-                                }
-                                .flex.items-center svg {
-                                    margin-right: 0 !important;
-                                }
-                            `;
-                            clonedDoc.head.appendChild(clonedStyle);
-
-                            // Remove all problematic style attributes from cloned elements
-                            clonedDoc.querySelectorAll('*').forEach(el => {
-                                const style = el.getAttribute('style');
-                                if (style) {
-                                    const sanitizedStyle = ColorUtils.sanitizeStyleColors(style, safePrimaryColor);
-                                    if (sanitizedStyle !== style) {
-                                        el.setAttribute('style', sanitizedStyle);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } catch (canvasError) {
-                    console.warn('Advanced canvas generation failed:', canvasError);
-
-                    // Fallback to simplified configuration
-                    try {
-                        canvas = await html2canvas(resumeElement, {
-                            scale: 1.5,
-                            backgroundColor: '#ffffff',
-                            logging: false,
-                            useCORS: false,
-                            allowTaint: false,
-                            onclone: (clonedDoc) => {
-                                // Apply minimal safe styling
-                                const clonedStyle = clonedDoc.createElement('style');
-                                clonedStyle.textContent = `
-                                    * { 
-                                        color: #1a1a1a !important; 
-                                        background-image: none !important;
-                                    }
-                                    h1, h2, h3, h4, h5, h6 { color: ${safePrimaryColor} !important; }
-                                `;
-                                clonedDoc.head.appendChild(clonedStyle);
-                            }
-                        });
-                    } catch (fallbackError) {
-                        console.error('Fallback canvas generation also failed:', fallbackError);
-                        throw new Error('Unable to generate PDF canvas. Please try again or contact support.');
-                    }
-                } finally {
-                    // Clean up
-                    document.head.removeChild(tempStyle);
-
-                    // Restore original styles
-                    allElements.forEach((el, index) => {
-                        const htmlEl = el as HTMLElement;
-                        const originalStyle = originalStyles.get(index);
-                        if (originalStyle) {
-                            htmlEl.setAttribute('style', originalStyle);
-                        } else {
-                            htmlEl.removeAttribute('style');
-                        }
-                    });
-                }
-
                 setExportProgress(80);
 
-                // Create PDF
-                const imgData = canvas.toDataURL('image/png');
+                // Create PDF with proper dimensions
                 const pdf = new jsPDF({
                     orientation: 'portrait',
                     unit: 'mm',
@@ -226,22 +108,45 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
 
                 const pageWidth = pdf.internal.pageSize.getWidth();
                 const pageHeight = pdf.internal.pageSize.getHeight();
-                const imgWidth = pageWidth;
-                const imgHeight = (canvas.height * pageWidth) / canvas.width;
+                const margin = 10; // 10mm margin
+                const imgWidth = pageWidth - (2 * margin);
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                // Handle multi-page PDFs
-                if (imgHeight <= pageHeight) {
-                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                // Convert canvas to high-quality image
+                const imgData = canvas.toDataURL('image/png', 1.0);
+
+                // Handle multi-page PDFs if content is too tall
+                if (imgHeight <= (pageHeight - (2 * margin))) {
+                    // Single page
+                    const yPosition = (pageHeight - imgHeight) / 2; // Center vertically
+                    pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight, '', 'FAST');
                 } else {
-                    let heightLeft = imgHeight;
-                    let position = 0;
+                    // Multi-page - split the image
+                    const pageContentHeight = pageHeight - (2 * margin);
+                    const sourceHeight = (pageContentHeight * canvas.width) / imgWidth;
+                    let remainingHeight = canvas.height;
+                    let sourceY = 0;
 
-                    while (heightLeft > 0) {
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                        position -= pageHeight;
+                    while (remainingHeight > 0) {
+                        const currentPageHeight = Math.min(sourceHeight, remainingHeight);
+                        const scaledHeight = (currentPageHeight * imgWidth) / canvas.width;
 
-                        if (heightLeft > 0) {
+                        // Create a canvas for this page
+                        const pageCanvas = document.createElement('canvas');
+                        pageCanvas.width = canvas.width;
+                        pageCanvas.height = currentPageHeight;
+                        const pageCtx = pageCanvas.getContext('2d');
+
+                        if (pageCtx) {
+                            pageCtx.drawImage(canvas, 0, sourceY, canvas.width, currentPageHeight, 0, 0, canvas.width, currentPageHeight);
+                            const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+                            pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, scaledHeight, '', 'FAST');
+                        }
+
+                        remainingHeight -= currentPageHeight;
+                        sourceY += currentPageHeight;
+
+                        if (remainingHeight > 0) {
                             pdf.addPage();
                         }
                     }
@@ -252,7 +157,7 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
 
                 setExportProgress(100);
                 toast.success('PDF exported successfully!', {
-                    description: 'Your resume has been saved as a PDF file.',
+                    description: 'Your resume has been saved as a high-quality PDF.',
                 });
 
             } else if (exportFormat === 'word') {
