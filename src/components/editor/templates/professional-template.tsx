@@ -1,6 +1,6 @@
 "use client";
 
-import type { ResumeData } from "@/types/resume";
+import type { ResumeData, PersonalInfo } from "@/types/resume";
 
 interface ProfessionalTemplateProps {
   resume: ResumeData;
@@ -14,11 +14,12 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
   }
 
   const {
-    personal = {},
+    personal = {} as PersonalInfo,
     experience = [],
     education = [],
     skills = [],
     projects = [],
+    achievements = [],
     certifications = [],
     languages = [],
     custom_sections = []
@@ -235,6 +236,35 @@ export function ProfessionalTemplate({ resume }: ProfessionalTemplateProps) {
                 <div key={lang.id || index} className="flex justify-between border-b border-gray-200 pb-2">
                   <span className="font-medium text-gray-800">{lang.name}</span>
                   <span className="text-gray-600 capitalize">{lang.proficiency}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Awards & Achievements Section */}
+        {achievements && achievements.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 uppercase tracking-wide">
+              Awards & Achievements
+            </h2>
+            <div className="space-y-4">
+              {achievements.map((achievement, index) => (
+                <div key={achievement.id || index} className="border-l-4 border-gray-300 pl-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{achievement.title}</h3>
+                      <p className="text-gray-700 font-medium">{achievement.issuer}</p>
+                    </div>
+                    {achievement.date && (
+                      <div className="text-right text-sm text-gray-600">
+                        <p className="font-medium">{achievement.date}</p>
+                      </div>
+                    )}
+                  </div>
+                  {achievement.description && (
+                    <p className="text-gray-700 mt-2">{achievement.description}</p>
+                  )}
                 </div>
               ))}
             </div>

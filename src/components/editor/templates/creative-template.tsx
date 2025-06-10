@@ -1,6 +1,6 @@
 "use client";
 
-import type { ResumeData } from "@/types/resume";
+import type { ResumeData, PersonalInfo } from "@/types/resume";
 
 interface CreativeTemplateProps {
   resume: ResumeData;
@@ -14,11 +14,12 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
   }
 
   const {
-    personal = {},
+    personal = {} as PersonalInfo,
     experience = [],
     education = [],
     skills = [],
     projects = [],
+    achievements = [],
     certifications = [],
     languages = [],
     custom_sections = []
@@ -26,7 +27,6 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
 
   // Default styling since settings are not part of ResumeData
   const primaryColor = '#7c3aed'; // violet-600
-  const secondaryColor = '#374151'; // gray-700
   const spacing = 'space-y-6';
   const margins = 'p-8';
 
@@ -263,6 +263,38 @@ export function CreativeTemplate({ resume }: CreativeTemplateProps) {
                 <div key={lang.id || index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="font-semibold text-gray-800">{lang.name}</span>
                   <span className="text-purple-600 font-medium capitalize">{lang.proficiency}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Awards & Achievements Section */}
+        {achievements && achievements.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-2xl font-bold mb-6 flex items-center" style={{ color: primaryColor }}>
+              <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mr-3">
+                🏆
+              </span>
+              Awards & Achievements
+            </h2>
+            <div className="space-y-4">
+              {achievements.map((achievement, index) => (
+                <div key={achievement.id || index} className="relative p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border-l-4 border-purple-600">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{achievement.title}</h3>
+                      <p className="text-purple-600 font-medium">{achievement.issuer}</p>
+                    </div>
+                    {achievement.date && (
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600 font-medium">{achievement.date}</p>
+                      </div>
+                    )}
+                  </div>
+                  {achievement.description && (
+                    <p className="text-gray-700 mt-2">{achievement.description}</p>
+                  )}
                 </div>
               ))}
             </div>

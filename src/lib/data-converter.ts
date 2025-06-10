@@ -180,6 +180,15 @@ export function convertEditorResumeToResumeData(editorResume: EditorResume): Res
         order: section.order || 0,
     }));
 
+    // Map awards to achievements
+    const achievements = (editorResume.awards || []).map(award => ({
+        id: award.id,
+        title: award.title || '',
+        issuer: award.issuer || '',
+        date: award.date || '',
+        description: award.description || '',
+    }));
+
     return {
         personal,
         summary: editorResume.personalInfo?.summary || '',
@@ -187,7 +196,7 @@ export function convertEditorResumeToResumeData(editorResume: EditorResume): Res
         education,
         skills,
         projects,
-        achievements: [], // Will be populated from awards if needed
+        achievements,
         certifications,
         languages,
         custom_sections,

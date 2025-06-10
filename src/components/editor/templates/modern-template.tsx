@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, Phone, MapPin, Globe, Linkedin } from "lucide-react";
-import type { ResumeData } from "@/types/resume";
+import type { ResumeData, PersonalInfo } from "@/types/resume";
 
 interface ModernTemplateProps {
   resume: ResumeData;
@@ -14,27 +14,28 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
     return <div className="p-8">Loading...</div>;
   }
 
-  const {
-    personal = {},
-    experience = [],
-    education = [],
-    skills = [],
-    projects = [],
-    certifications = [],
-    languages = [],
-    custom_sections = []
+  const { 
+    personal = {} as PersonalInfo, 
+    experience = [], 
+    education = [], 
+    skills = [], 
+    projects = [], 
+    achievements = [],
+    certifications = [], 
+    languages = [], 
+    custom_sections = [] 
   } = resume;
 
   // Default styling since settings are not part of ResumeData
   const primaryColor = '#2563eb'; // blue-600
   const secondaryColor = '#374151'; // gray-700
   const spacing = 'space-y-6';
-  const margins = 'p-8';
+  const margins = 'p-6'; // Reduced from p-8 to p-6
 
   return (
     <div className={`max-w-none mx-auto bg-white shadow-lg ${margins} ${spacing}`} data-testid="resume-template">
       {/* Header Section */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           {personal.full_name || 'Your Name'}
         </h1>
@@ -271,6 +272,38 @@ export function ModernTemplate({ resume }: ModernTemplateProps) {
               <div key={lang.id || index} className="flex justify-between">
                 <p className="font-semibold">{lang.name}</p>
                 <p className="text-gray-500 capitalize">{lang.proficiency}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Awards & Achievements Section */}
+      {achievements && achievements.length > 0 && (
+        <div>
+          <h2
+            className="text-xl font-bold mb-4 pb-2 border-b"
+            style={{ color: primaryColor }}
+          >
+            Awards & Achievements
+          </h2>
+          <div className="space-y-4">
+            {achievements.map((achievement, index) => (
+              <div key={achievement.id || index} className="space-y-1">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-lg">{achievement.title}</h3>
+                    <p className="text-gray-600">{achievement.issuer}</p>
+                  </div>
+                  {achievement.date && (
+                    <div className="text-right text-sm text-gray-500">
+                      <p>{achievement.date}</p>
+                    </div>
+                  )}
+                </div>
+                {achievement.description && (
+                  <p className="text-gray-700">{achievement.description}</p>
+                )}
               </div>
             ))}
           </div>

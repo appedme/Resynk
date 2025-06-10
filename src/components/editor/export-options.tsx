@@ -250,11 +250,12 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
     };
 
     const handleEmailExport = () => {
-        const subject = encodeURIComponent(`Resume - ${resume.personal.full_name}`);
+        const resumeData = convertEditorResumeToResumeData(resume);
+        const subject = encodeURIComponent(`Resume - ${resumeData.personal.full_name}`);
         const body = encodeURIComponent(`Please find my attached resume.
 
 Best regards,
-${resume.personal.full_name}`);
+${resumeData.personal.full_name}`);
 
         window.open(`mailto:?subject=${subject}&body=${body}`);
     };
