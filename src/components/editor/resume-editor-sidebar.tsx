@@ -9,9 +9,6 @@ import {
   FolderOpen,
   Award,
   Languages,
-  Plus,
-  ChevronDown,
-  ChevronRight,
   FileText,
   Trash2
 } from "lucide-react";
@@ -30,7 +27,6 @@ import { CertificationsEditor } from "./sections/certifications-editor";
 import { LanguagesEditor } from "./sections/languages-editor";
 import { AwardsEditor } from "./sections/awards-editor";
 import { DraggableSectionList } from "./draggable-section-list";
-import { AISuggestions } from "./ai-suggestions";
 import { AddCustomSectionDialog } from "./add-custom-section-dialog";
 
 // Editor-specific Resume interface - matching the main editor
@@ -148,7 +144,6 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
     "personal", "experience", "education", "skills", "projects",
     "certifications", "languages", "awards", ...resume.customSections.map(s => s.id)
   ]);
-  const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Helper function to update specific sections
   const handlePersonalInfoChange = (field: string, value: string) => {
@@ -228,7 +223,6 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
 
     handleCustomSectionChange([...resume.customSections, newSection]);
     setSectionOrder(prev => [...prev, newSection.id]);
-    setShowAddDialog(false);
   };
 
   const baseSections: SectionItem[] = [
@@ -489,18 +483,6 @@ export function ResumeEditorSidebar({ resume, onResumeChange }: ResumeEditorSide
         <ScrollArea className="h-full p-4">
           {activeComponent}
         </ScrollArea>
-      </div>
-
-      {/* AI Suggestions Panel */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-4">
-        <AISuggestions
-          section={activeSection || 'general'}
-          currentContent=""
-          onApplySuggestion={(suggestion) => {
-            console.log('Apply suggestion:', suggestion);
-            // Could implement applying suggestions to active section
-          }}
-        />
       </div>
     </div>
   );
