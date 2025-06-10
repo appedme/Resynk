@@ -20,15 +20,19 @@ export async function withAuth(handler: AuthenticatedHandler) {
         profileImageUrl: user.profileImageUrl,
       };
 
-      // Create or update user in our database
-      await UserService.createOrUpdateUser(stackUser);
+      console.log('🔐 StackAuth user authenticated:', {
+        id: stackUser.id,
+        email: stackUser.primaryEmail,
+        name: stackUser.displayName
+      });
 
-      // Get user from our database
-      const dbUser = await UserService.getUserByStackId(user.id);
-      
-      if (!dbUser) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
+      // Create or update user in our database
+      const dbUser = await UserService.createOrUpdateUser(stackUser);
+      console.log('💾 Database user created/updated:', {
+        id: dbUser.id,
+        stackId: dbUser.stackId,
+        email: dbUser.email
+      });
 
       return await handler(request, stackUser, dbUser);
     } catch (error) {

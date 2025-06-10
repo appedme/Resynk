@@ -11,8 +11,9 @@ export function Navbar() {
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
     const user = useUser();
-
-    const [isLoggedIn, setIsLoggedIn] = useState(user !== null);
+    
+    // User state will reactively update when authentication changes
+    const isLoggedIn = !!user;
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
@@ -109,20 +110,32 @@ export function Navbar() {
                                 FAQ
                             </Link>
                             <div className="border-t border-gray-200 pt-4 mt-4">
-                                <Link
-                                    href="/handler/sign-in"
-                                    className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    Sign In
-                                </Link>
-                                <Link
-                                    href="/handler/sign-up"
-                                    className="block px-3 py-2 mt-2 text-center text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-md hover:shadow-lg transition-all duration-200"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    Get Started
-                                </Link>
+                                {isLoggedIn ? (
+                                    <Link
+                                        href="/dashboard"
+                                        className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <Link
+                                            href="/handler/sign-in"
+                                            className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            Sign In
+                                        </Link>
+                                        <Link
+                                            href="/handler/sign-up"
+                                            className="block px-3 py-2 mt-2 text-center text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-md hover:shadow-lg transition-all duration-200"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            Get Started
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

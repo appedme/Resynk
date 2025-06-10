@@ -147,14 +147,23 @@ export default function Dashboard() {
   const loadUserResumes = async () => {
     if (!user) return;
     
+    console.log('📊 Loading resumes for user:', user.id);
+    
     try {
       const response = await fetch('/api/resumes');
+      console.log('📡 API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📄 Resumes loaded:', data.resumes?.length || 0);
         setUserResumes(data.resumes || []);
+      } else {
+        const errorData = await response.text();
+        console.error('❌ API error:', response.status, errorData);
+        toast.error('Failed to load your resumes');
       }
     } catch (error) {
-      console.error('Failed to load resumes:', error);
+      console.error('💥 Failed to load resumes:', error);
       toast.error('Failed to load your resumes');
     } finally {
       setLoading(false);
@@ -173,8 +182,8 @@ export default function Dashboard() {
     );
   }
 
-  // Use user's actual resumes if available, fallback to mock data for now
-  const displayResumes = userResumes.length > 0 ? userResumes : resumes;
+  // Use only user's actual resumes from database
+  const displayResumes = userResumes;
 
   // Calculate dashboard stats
   const stats: DashboardStats = {

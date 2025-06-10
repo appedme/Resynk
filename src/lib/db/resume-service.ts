@@ -1,4 +1,5 @@
 import { prisma } from '../prisma';
+import { getSampleResumeData } from '../sample-data';
 
 export class ResumeService {
   /**
@@ -9,7 +10,7 @@ export class ResumeService {
     data: {
       title: string;
       templateId: string;
-      resumeData?: unknown;
+      resumeData?: any;
     }
   ) {
     // First verify the template exists
@@ -21,20 +22,23 @@ export class ResumeService {
       throw new Error(`Template with ID ${data.templateId} not found`);
     }
 
-    // First create the resume
+    // Use sample data as default, then merge with provided data
+    const sampleData = getSampleResumeData();
+    const resumeData = data.resumeData || sampleData;
+
+    // Create the resume with content
     const resume = await prisma.resume.create({
       data: {
         title: data.title,
         templateId: data.templateId,
         userId,
         slug: this.generateSlug(data.title),
+        content: JSON.stringify(resumeData),
+      },
+      include: {
+        template: true,
       },
     });
-
-    // If resume data is provided, update it (simplified for now)
-    if (data.resumeData) {
-      await this.updateResumeData(resume.id, data.resumeData);
-    }
 
     return resume;
   }
@@ -47,15 +51,6 @@ export class ResumeService {
       where: { userId },
       include: {
         template: true,
-        personalInfo: true,
-        experiences: { orderBy: { order: 'asc' } },
-        educations: { orderBy: { order: 'asc' } },
-        skills: { orderBy: { order: 'asc' } },
-        projects: { orderBy: { order: 'asc' } },
-        certifications: { orderBy: { order: 'asc' } },
-        languages: { orderBy: { order: 'asc' } },
-        awards: { orderBy: { order: 'asc' } },
-        customSections: { orderBy: { order: 'asc' } },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -70,32 +65,40 @@ export class ResumeService {
       whereClause.userId = userId;
     }
 
-    return await prisma.resume.findUnique({
+    const resume = await prisma.resume.findUnique({
       where: whereClause,
       include: {
         template: true,
-        personalInfo: true,
-        experiences: { orderBy: { order: 'asc' } },
-        educations: { orderBy: { order: 'asc' } },
-        skills: { orderBy: { order: 'asc' } },
-        projects: { orderBy: { order: 'asc' } },
-        certifications: { orderBy: { order: 'asc' } },
-        languages: { orderBy: { order: 'asc' } },
-        awards: { orderBy: { order: 'asc' } },
-        customSections: { orderBy: { order: 'asc' } },
       },
     });
+
+    if (!resume) return null;
+
+    // Parse the JSON content
+    let parsedContent = null;
+    try {
+      parsedContent = resume.content ? JSON.parse(resume.content as string) : null;
+    } catch (error) {
+      console.error('Error parsing resume content:', error);
+      parsedContent = getSampleResumeData(); // Fallback to sample data
+    }
+
+    return {
+      ...resume,
+      data: parsedContent,
+    };
   }
 
   /**
-   * Update resume data (all sections) - simplified for now
+   * Update resume data
    */
-  static async updateResumeData(resumeId: string) {
-    // For now, just update the resume's updatedAt timestamp
-    // TODO: Implement full data mapping later
+  static async updateResumeData(resumeId: string, resumeData: any) {
     await prisma.resume.update({
       where: { id: resumeId },
-      data: { updatedAt: new Date() },
+      data: { 
+        content: JSON.stringify(resumeData),
+        updatedAt: new Date() 
+      },
     });
   }
 
@@ -129,16 +132,48 @@ export class ResumeService {
       where: { slug, isPublic: true },
       include: {
         template: true,
-        personalInfo: true,
-        experiences: { orderBy: { order: 'asc' } },
-        educations: { orderBy: { order: 'asc' } },
-        skills: { orderBy: { order: 'asc' } },
-        projects: { orderBy: { order: 'asc' } },
-        certifications: { orderBy: { order: 'asc' } },
-        languages: { orderBy: { order: 'asc' } },
-        awards: { orderBy: { order: 'asc' } },
-        customSections: { orderBy: { order: 'asc' } },
       },
     });
+  }
+
+  /**
+   * Convert database resume to dashboard format
+   */
+  static convertToSimpleFormat(resume: any) {
+    return {
+      id: resume.id,
+      title: resume.title,
+      template: resume.template?.name?.toLowerCase() || 'modern',
+      lastModified: formatLastModified(resume.updatedAt),
+      status: resume.isPublished ? 'published' : 'draft',
+      atsScore: 85, // TODO: Calculate actual ATS score
+      views: 0, // TODO: Track views
+      downloads: 0, // TODO: Track downloads
+      favorite: false, // TODO: Add favorite field to schema
+      createdAt: resume.createdAt.toISOString().split('T')[0],
+      updatedAt: resume.updatedAt.toISOString().split('T')[0],
+      tags: [], // TODO: Extract tags from resume content
+    };
+  }
+}
+
+function formatLastModified(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours === 0) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return diffMinutes < 1 ? 'Just now' : `${diffMinutes} minutes ago`;
+    }
+    return `${diffHours} hours ago`;
+  } else if (diffDays === 1) {
+    return 'Yesterday';
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  } else {
+    return date.toLocaleDateString();
   }
 }
