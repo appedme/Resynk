@@ -13,6 +13,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { convertEditorResumeToResumeData, type EditorResume } from "@/lib/data-converter";
 import type { ResumeData } from "@/types/resume";
+import { toast } from "sonner";
 
 interface ExportOptionsProps {
     resume: EditorResume;
@@ -93,20 +94,38 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                     // If already hex, return as-is
                     if (color.startsWith('#')) return color;
                     
-                    // Create temporary element to get computed color
-                    const tempEl = document.createElement('div');
-                    tempEl.style.color = color;
-                    document.body.appendChild(tempEl);
-                    const computedColor = window.getComputedStyle(tempEl).color;
-                    document.body.removeChild(tempEl);
+                    // Handle oklch colors specifically
+                    if (color.includes('oklch')) {
+                        // Extract values from oklch(l c h / alpha) format
+                        const oklchMatch = color.match(/oklch\(([^)]+)\)/);
+                        if (oklchMatch) {
+                            return '#1a1a1a'; // Default fallback for oklch
+                        }
+                    }
                     
-                    // Convert rgb to hex
-                    const rgbMatch = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-                    if (rgbMatch) {
-                        const r = parseInt(rgbMatch[1]);
-                        const g = parseInt(rgbMatch[2]);
-                        const b = parseInt(rgbMatch[3]);
-                        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+                    // Handle CSS variables
+                    if (color.includes('var(')) {
+                        return '#1a1a1a'; // Default fallback for CSS variables
+                    }
+                    
+                    // Try to compute color using DOM
+                    try {
+                        const tempEl = document.createElement('div');
+                        tempEl.style.color = color;
+                        document.body.appendChild(tempEl);
+                        const computedColor = window.getComputedStyle(tempEl).color;
+                        document.body.removeChild(tempEl);
+                        
+                        // Convert rgb to hex
+                        const rgbMatch = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                        if (rgbMatch) {
+                            const r = parseInt(rgbMatch[1]);
+                            const g = parseInt(rgbMatch[2]);
+                            const b = parseInt(rgbMatch[3]);
+                            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+                        }
+                    } catch (error) {
+                        console.warn('Color conversion failed for:', color, error);
                     }
                     
                     // Fallback to black if conversion fails
@@ -341,6 +360,7 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
 
                 setExportProgress(90);
                 pdf.save(fileName);
+                toast.success('PDF exported successfully!');
 
             } else if (exportFormat === 'word') {
                 const resumeData = convertEditorResumeToResumeData(resume);
@@ -354,6 +374,7 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                toast.success('HTML document exported successfully!');
 
             } else if (exportFormat === 'txt') {
                 const resumeData = convertEditorResumeToResumeData(resume);
@@ -367,6 +388,7 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                toast.success('Text file exported successfully!');
             }
 
             setExportProgress(100);
@@ -374,43 +396,17 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
         } catch (error) {
             console.error('Export failed:', error);
             
-            // Provide detailed user-friendly error messages
+            // Provide detailed user-friendly error messages with toast
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             
             if (errorMessage.includes('oklch') || errorMessage.includes('color function') || errorMessage.includes('color format')) {
-                alert(`PDF export failed due to unsupported color formats in your resume template. 
-
-This can happen when:
-• Your browser doesn't support certain CSS color functions
-• The template uses advanced color formats (oklch, lab, etc.)
-
-Solutions:
-1. Try switching to a different template
-2. Export as HTML format instead
-3. Update your browser to the latest version
-
-Would you like to try exporting as HTML instead?`);
+                toast.error('PDF export failed due to unsupported color formats. Try switching templates or exporting as HTML.');
             } else if (errorMessage.includes('Resume preview element not found')) {
-                alert('Could not find the resume preview. Please make sure the resume is loaded and try again.');
+                toast.error('Could not find the resume preview. Please reload and try again.');
             } else if (errorMessage.includes('html2canvas')) {
-                alert(`PDF export failed due to rendering issues. 
-
-This might be caused by:
-• Complex CSS styles that can't be converted to PDF
-• Browser compatibility issues
-• Large resume content
-
-Please try:
-1. Exporting as HTML format
-2. Simplifying your resume template
-3. Using a different browser`);
+                toast.error('PDF export failed due to rendering issues. Try exporting as HTML format instead.');
             } else {
-                alert(`Export failed: ${errorMessage}
-
-If this issue persists, please:
-1. Try a different export format (HTML or TXT)
-2. Refresh the page and try again
-3. Contact support if the problem continues`);
+                toast.error(`Export failed: ${errorMessage}`);
             }
         } finally {
             setIsExporting(false);

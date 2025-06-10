@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, FileText, MoreHorizontal, Search, Star, Eye, Download, Share2, Copy, Trash2, Edit3, BarChart3, TrendingUp, Users, Clock, Grid, List, SortAsc, SortDesc } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, FileText, Calendar, MoreHorizontal, Search, Filter, Star, Eye, Download, Share2, Copy, Trash2, Edit3, BarChart3, TrendingUp, Users, Clock, Grid, List, SortAsc, SortDesc } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import {
   DropdownMenu,
@@ -28,7 +31,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Link from "next/link";
-import Header from "@/components/header";
 
 // Types
 interface Resume {
@@ -151,8 +153,8 @@ export default function Dashboard() {
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      let aValue: string | number = a[sortBy];
-      let bValue: string | number = b[sortBy];
+      let aValue: any = a[sortBy];
+      let bValue: any = b[sortBy];
       
       if (sortBy === "lastModified") {
         aValue = new Date(a.updatedAt).getTime();
@@ -161,7 +163,7 @@ export default function Dashboard() {
       
       if (typeof aValue === "string") {
         aValue = aValue.toLowerCase();
-        bValue = (bValue as string).toLowerCase();
+        bValue = bValue.toLowerCase();
       }
       
       if (sortOrder === "asc") {
@@ -176,8 +178,6 @@ export default function Dashboard() {
     setResumes(resumes.map(resume => 
       resume.id === id ? { ...resume, favorite: !resume.favorite } : resume
     ));
-    const resume = resumes.find(r => r.id === id);
-    toast.success(resume?.favorite ? 'Removed from favorites' : 'Added to favorites');
   };
 
   const handleDuplicate = (id: string) => {
@@ -195,7 +195,6 @@ export default function Dashboard() {
         lastModified: "Just now",
       };
       setResumes([duplicate, ...resumes]);
-      toast.success('Resume duplicated successfully');
     }
   };
 
@@ -203,17 +202,10 @@ export default function Dashboard() {
     const shareUrl = `${window.location.origin}/resume/${id}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
-      toast.success('Share link copied to clipboard');
+      console.log('Share link copied to clipboard');
     } catch (error) {
       console.error('Failed to copy share link:', error);
-      toast.error('Failed to copy share link');
     }
-  };
-
-  const handleDownload = (id: string) => {
-    // This would typically trigger the export functionality
-    toast.info(`Opening export options for resume ${id}...`);
-    // In a real implementation, this would open the export dialog or redirect to editor with export mode
   };
 
   const handleDelete = (id: string) => {
@@ -225,7 +217,6 @@ export default function Dashboard() {
     if (resumeToDelete) {
       setResumes(resumes.filter(r => r.id !== resumeToDelete));
       setResumeToDelete(null);
-      toast.success('Resume deleted successfully');
     }
     setDeleteDialogOpen(false);
   };
@@ -247,11 +238,9 @@ export default function Dashboard() {
   };
 
   return (
-    <>
-      <Header />
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
-        {/* Header */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -370,7 +359,7 @@ export default function Dashboard() {
 
           {/* Filters */}
           <div className="flex gap-2">
-            <Select value={filterStatus} onValueChange={(value: "all" | "draft" | "published" | "archived") => setFilterStatus(value)}>
+            <Select value={filterStatus} onValueChange={(value: any) => setFilterStatus(value)}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -382,7 +371,7 @@ export default function Dashboard() {
               </SelectContent>
             </Select>
 
-            <Select value={sortBy} onValueChange={(value: "lastModified" | "title" | "atsScore" | "views") => setSortBy(value)}>
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -479,7 +468,7 @@ export default function Dashboard() {
                               <Share2 className="w-4 h-4 mr-2" />
                               Share
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownload(resume.id)}>
+                            <DropdownMenuItem>
                               <Download className="w-4 h-4 mr-2" />
                               Download
                             </DropdownMenuItem>
@@ -612,7 +601,7 @@ export default function Dashboard() {
                           <Share2 className="w-4 h-4 mr-2" />
                           Share
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownload(resume.id)}>
+                        <DropdownMenuItem>
                           <Download className="w-4 h-4 mr-2" />
                           Download
                         </DropdownMenuItem>
@@ -685,8 +674,7 @@ export default function Dashboard() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        </div>
       </div>
-    </>
+    </div>
   );
 }
