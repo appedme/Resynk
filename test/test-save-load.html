@@ -1,75 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Save/Load Service</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .section {
-            margin: 20px 0;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        .output {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        input,
-        textarea {
-            padding: 8px;
-            margin: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 100px;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .output { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; max-height: 200px; overflow-y: auto; }
+        input, textarea { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        textarea { width: 100%; height: 100px; }
     </style>
 </head>
-
 <body>
     <div class="container">
         <h1>Resume Save/Load Service Test</h1>
-
+        
         <div class="section">
             <h2>Test Data</h2>
             <label for="resumeTitle">Resume Title:</label>
             <input type="text" id="resumeTitle" value="Test Resume" style="width: 200px;">
-
+            
             <label for="resumeData">Resume Data (JSON):</label>
             <textarea id="resumeData">{
   "personal": {
@@ -196,9 +150,9 @@
                 const title = document.getElementById('resumeTitle').value;
                 const dataText = document.getElementById('resumeData').value;
                 const resumeData = JSON.parse(dataText);
-
+                
                 const resumeId = SaveLoadService.saveResume(resumeData, title);
-
+                
                 if (resumeId) {
                     log(`✅ Successfully saved resume with ID: ${resumeId}`);
                 } else {
@@ -213,11 +167,11 @@
             try {
                 const resumes = SaveLoadService.getAllResumes();
                 log(`📄 Found ${resumes.length} saved resumes:`);
-
+                
                 resumes.forEach((resume, index) => {
                     log(`${index + 1}. ${resume.title} (ID: ${resume.id.substr(0, 8)}...) - ${new Date(resume.lastModified).toLocaleString()}`);
                 });
-
+                
                 if (resumes.length === 0) {
                     log('No resumes found in storage');
                 }
@@ -249,5 +203,4 @@
         testStorageInfo();
     </script>
 </body>
-
 </html>

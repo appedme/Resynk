@@ -174,9 +174,27 @@ export default function Dashboard() {
   if (!user || loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading your dashboard...</p>
+        <div className="text-center space-y-8">
+          {/* Fancy loading animation */}
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute top-0 left-0 w-full h-full rounded-full border-8 border-gray-200 dark:border-gray-700"></div>
+            <div className="absolute top-0 left-0 w-full h-full rounded-full border-8 border-t-blue-600 animate-spin"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2"/>
+              </svg>
+            </div>
+          </div>
+          
+          {/* Loading text with shimmer effect */}
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Loading Dashboard
+            </h3>
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg animate-pulse">
+              <div className="h-2 w-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+            </div>
+          </div>
         </div>
       </div>
     );

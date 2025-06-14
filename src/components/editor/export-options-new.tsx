@@ -9,8 +9,6 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import { convertEditorResumeToResumeData, type EditorResume } from "@/lib/data-converter";
 import type { ResumeData } from "@/types/resume";
 import { toast } from "sonner";
@@ -38,198 +36,48 @@ export function ExportOptions({ resume }: ExportOptionsProps) {
             if (exportFormat === 'pdf') {
                 setExportProgress(20);
 
-                // Find the resume preview element
-                const resumeElement = document.querySelector('[data-resume-preview]') as HTMLElement;
-                if (!resumeElement) {
-                    throw new Error('Resume preview element not found');
-                }
+                try {
+                    setExportProgress(50);
 
-                setExportProgress(40);
+                    // Use browser's built-in print functionality for PDF export
+                    // This gives 100% accuracy since it prints exactly what the user sees
+                    const printWindow = window.open('', '_blank');
 
-                // Create a clean clone for PDF export
-                const clonedElement = resumeElement.cloneNode(true) as HTMLElement;
+                    if (!printWindow) {
+                        throw new Error('Please allow popups to export PDF');
+                    }
 
-                // Apply comprehensive PDF-friendly styles
-                const applyPDFStyles = (element: HTMLElement) => {
-                    const allElements = element.querySelectorAll('*');
-                    allElements.forEach((el) => {
-                        const htmlEl = el as HTMLElement;
+                    setExportProgress(70);
 
-                        // Force clean, readable styles
-                        htmlEl.style.color = '#1a1a1a';
-                        htmlEl.style.backgroundColor = 'transparent';
-                        htmlEl.style.backgroundImage = 'none';
-                        htmlEl.style.boxShadow = 'none';
-                        htmlEl.style.textShadow = 'none';
-                        htmlEl.style.filter = 'none';
-                        htmlEl.style.backdropFilter = 'none';
+                    // Convert resume data for the print view
+                    const resumeData = convertEditorResumeToResumeData(resume);
 
-                        // Fix headings
-                        if (htmlEl.tagName.match(/^H[1-6]$/)) {
-                            htmlEl.style.color = '#1f2937';
-                            htmlEl.style.fontWeight = 'bold';
-                        }
+                    // Create the HTML content for printing
+                    const printContent = generatePrintableHTML(resumeData);
 
-                        // Fix icons
-                        if (htmlEl.tagName === 'svg') {
-                            htmlEl.style.display = 'inline-block';
-                            htmlEl.style.verticalAlign = 'middle';
-                            htmlEl.style.marginRight = '6px';
-                            htmlEl.style.width = '16px';
-                            htmlEl.style.height = '16px';
-                            htmlEl.style.color = '#374151';
-                        }
+                    // Write the content to the new window
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
 
-                        // Fix flex containers
-                        if (htmlEl.classList.contains('flex')) {
-                            htmlEl.style.display = 'flex';
-                            htmlEl.style.alignItems = 'center';
-                        }
+                    setExportProgress(90);
 
-                        // Remove gradients and white text
-                        if (htmlEl.style.background && htmlEl.style.background.includes('gradient')) {
-                            htmlEl.style.background = '#f8fafc';
-                        }
+                    // Wait for content to load, then trigger print
+                    printWindow.onload = () => {
+                        setTimeout(() => {
+                            printWindow.print();
+                            setExportProgress(100);
+                            toast.success('PDF export opened!', {
+                                description: 'Use your browser\'s print dialog to save as PDF.',
+                            });
+                        }, 500);
+                    };
 
-                        if (htmlEl.classList.contains('text-white') || htmlEl.style.color === 'white') {
-                            htmlEl.style.color = '#1a1a1a';
-                        }
+                } catch (error) {
+                    console.error('PDF export failed:', error);
+                    toast.error('PDF export failed', {
+                        description: error instanceof Error ? error.message : 'Failed to open print dialog'
                     });
-                };
-
-                applyPDFStyles(clonedElement);
-
-                // Temporarily add to DOM for rendering
-                clonedElement.style.position = 'fixed';
-                clonedElement.style.top = '-9999px';
-                clonedElement.style.left = '-9999px';
-                clonedElement.style.width = resumeElement.offsetWidth + 'px';
-                clonedElement.style.height = 'auto';
-                clonedElement.style.background = '#ffffff';
-                document.body.appendChild(clonedElement);
-
-                setExportProgress(60);
-
-                // Convert to canvas with optimized settings
-                const canvas = await html2canvas(clonedElement, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: false,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    removeContainer: true,
-                    foreignObjectRendering: false,
-                    imageTimeout: 15000,
-                    onclone: (clonedDoc) => {
-                        // Add comprehensive CSS reset
-                        const style = clonedDoc.createElement('style');
-                        style.textContent = `
-                            * {
-                                color: #1a1a1a !important;
-                                background-image: none !important;
-                                box-shadow: none !important;
-                                text-shadow: none !important;
-                                filter: none !important;
-                                backdrop-filter: none !important;
-                            }
-                            
-                            body {
-                                background: #ffffff !important;
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-                            }
-                            
-                            h1, h2, h3, h4, h5, h6 {
-                                color: #1f2937 !important;
-                                font-weight: bold !important;
-                            }
-                            
-                            .text-white, [style*="color: white"] {
-                                color: #1a1a1a !important;
-                            }
-                            
-                            [class*="gradient"], [style*="gradient"] {
-                                background: #f8fafc !important;
-                                background-image: none !important;
-                            }
-                            
-                            svg {
-                                display: inline-block !important;
-                                vertical-align: middle !important;
-                                margin-right: 6px !important;
-                                width: 16px !important;
-                                height: 16px !important;
-                                color: #374151 !important;
-                            }
-                            
-                            .flex {
-                                display: flex !important;
-                                align-items: center !important;
-                            }
-                        `;
-                        clonedDoc.head.appendChild(style);
-                    }
-                });
-
-                // Remove the temporary element
-                document.body.removeChild(clonedElement);
-
-                setExportProgress(80);
-
-                // Create high-quality PDF
-                const imgData = canvas.toDataURL('image/png', 1.0);
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: pageSize === 'a4' ? 'a4' : 'letter',
-                    compress: true,
-                });
-
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                const margin = 10;
-                const imgWidth = pageWidth - (margin * 2);
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-                let yPosition = margin;
-
-                if (imgHeight <= pageHeight - (margin * 2)) {
-                    // Single page
-                    pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight, '', 'FAST');
-                } else {
-                    // Multi-page handling
-                    let remainingHeight = imgHeight;
-                    const pageContentHeight = pageHeight - (margin * 2);
-
-                    while (remainingHeight > 0) {
-                        const currentPageHeight = Math.min(remainingHeight, pageContentHeight);
-                        const sourceY = (imgHeight - remainingHeight) * (canvas.height / imgHeight);
-                        const sourceHeight = currentPageHeight * (canvas.height / imgHeight);
-
-                        const pageCanvas = document.createElement('canvas');
-                        pageCanvas.width = canvas.width;
-                        pageCanvas.height = sourceHeight;
-                        const pageCtx = pageCanvas.getContext('2d');
-
-                        if (pageCtx) {
-                            pageCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
-                            const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
-                            pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, currentPageHeight, '', 'FAST');
-                        }
-
-                        remainingHeight -= pageContentHeight;
-
-                        if (remainingHeight > 0) {
-                            pdf.addPage();
-                        }
-                    }
                 }
-
-                setExportProgress(95);
-                pdf.save(fileName);
-
-                toast.success('PDF exported successfully!', {
-                    description: 'Your resume has been downloaded as a high-quality PDF.',
-                });
 
             } else if (exportFormat === 'word') {
                 const resumeData = convertEditorResumeToResumeData(resume);
@@ -437,6 +285,272 @@ ${resumeData.personal.full_name}`);
             toast.error('Failed to copy share link');
         }
     };
+
+    // Generate printable HTML for browser's print functionality
+    function generatePrintableHTML(resumeData: ResumeData): string {
+        const { personal, summary, experience, education, skills, projects, achievements, certifications, languages } = resumeData;
+        
+        return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${personal.full_name} - Resume</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @media print {
+            @page {
+                margin: 0.5in;
+                size: A4;
+            }
+            
+            body {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #333;
+            background: white;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 15px;
+        }
+        
+        .name {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 8px;
+        }
+        
+        .contact {
+            font-size: 10pt;
+            color: #666;
+        }
+        
+        .contact span {
+            margin: 0 10px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2563eb;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .item {
+            margin-bottom: 12px;
+        }
+        
+        .item-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .item-subtitle {
+            font-size: 11pt;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        
+        .item-meta {
+            font-size: 10pt;
+            color: #6b7280;
+            margin: 2px 0;
+        }
+        
+        .item-description {
+            font-size: 11pt;
+            color: #374151;
+            margin-top: 4px;
+            text-align: justify;
+        }
+        
+        .summary {
+            font-size: 11pt;
+            color: #374151;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        
+        .skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .skill {
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10pt;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .achievements-list {
+            list-style: none;
+        }
+        
+        .achievements-list li {
+            margin-bottom: 4px;
+            font-size: 11pt;
+            color: #374151;
+        }
+        
+        .achievements-list li:before {
+            content: "•";
+            color: #2563eb;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="name">${personal.full_name}</h1>
+        <div class="contact">
+            ${personal.email ? `<span>📧 ${personal.email}</span>` : ''}
+            ${personal.phone ? `<span>📞 ${personal.phone}</span>` : ''}
+            ${personal.location ? `<span>📍 ${personal.location}</span>` : ''}
+            ${personal.website ? `<span>🌐 ${personal.website}</span>` : ''}
+            ${personal.linkedin ? `<span>💼 LinkedIn</span>` : ''}
+        </div>
+    </div>
+    
+    ${summary ? `
+    <div class="section">
+        <h2 class="section-title">Summary</h2>
+        <p class="summary">${summary}</p>
+    </div>
+    ` : ''}
+    
+    ${experience && experience.length > 0 ? `
+    <div class="section">
+        <h2 class="section-title">Experience</h2>
+        ${experience.map(exp => `
+        <div class="item">
+            <div class="item-title">${exp.position}</div>
+            <div class="item-subtitle">${exp.company}</div>
+            <div class="item-meta">
+                ${exp.start_date} - ${exp.is_current ? 'Present' : exp.end_date || 'Present'}
+                ${exp.location ? ` • ${exp.location}` : ''}
+            </div>
+            <div class="item-description">${exp.description}</div>
+        </div>
+        `).join('')}
+    </div>
+    ` : ''}
+    
+    ${education && education.length > 0 ? `
+    <div class="section">
+        <h2 class="section-title">Education</h2>
+        ${education.map(edu => `
+        <div class="item">
+            <div class="item-title">${edu.degree}</div>
+            <div class="item-subtitle">${edu.institution}</div>
+            <div class="item-meta">
+                ${edu.start_date} - ${edu.end_date || 'Present'}
+                ${edu.gpa ? ` • GPA: ${edu.gpa}` : ''}
+            </div>
+        </div>
+        `).join('')}
+    </div>
+    ` : ''}
+    
+    ${skills && skills.length > 0 ? `
+    <div class="section">
+        <h2 class="section-title">Skills</h2>
+        <div class="skills-grid">
+            ${skills.map(skill => `<span class="skill">${skill.name}</span>`).join('')}
+        </div>
+    </div>
+    ` : ''}
+    
+    ${projects && projects.length > 0 ? `
+    <div class="section">
+        <h2 class="section-title">Projects</h2>
+        ${projects.map(project => `
+        <div class="item">
+            <div class="item-title">${project.name}</div>
+            <div class="item-meta">
+                ${project.start_date ? `${project.start_date} - ${project.end_date || 'Present'}` : ''}
+                ${project.url ? ` • ${project.url}` : ''}
+            </div>
+            <div class="item-description">${project.description}</div>
+        </div>
+        `).join('')}
+    </div>
+    ` : ''}
+    
+    ${certifications && certifications.length > 0 ? `
+    <div class="section">
+        <h2 class="section-title">Certifications</h2>
+        ${certifications.map(cert => `
+        <div class="item">
+            <div class="item-title">${cert.name}</div>
+            <div class="item-subtitle">${cert.issuer}</div>
+            <div class="item-meta">
+                ${cert.issue_date}${cert.expiry_date ? ` - ${cert.expiry_date}` : ''}
+            </div>
+        </div>
+        `).join('')}
+    </div>
+    ` : ''}
+    
+    ${languages && languages.length > 0 ? `
+    <div class="section">
+        <h2 class="section-title">Languages</h2>
+        <div class="skills-grid">
+            ${languages.map(lang => `<span class="skill">${lang.name} (${lang.proficiency})</span>`).join('')}
+        </div>
+    </div>
+    ` : ''}
+    
+    ${achievements && achievements.length > 0 ? `
+    <div class="section">
+        <h2 class="section-title">Achievements</h2>
+        <ul class="achievements-list">
+            ${achievements.map(achievement => `
+            <li>${achievement.title}${achievement.issuer ? ` - ${achievement.issuer}` : ''}${achievement.date ? ` (${achievement.date})` : ''}</li>
+            `).join('')}
+        </ul>
+    </div>
+    ` : ''}
+    
+</body>
+</html>
+    `.trim();
+}
 
     return (
         <Dialog>

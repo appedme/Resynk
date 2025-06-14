@@ -239,17 +239,17 @@ export default function EditorPage({ params }: EditorPageProps) {
 
     try {
       console.log('💾 Starting save process...', currentResume.title);
-      
+
       // Convert editor resume to ResumeData format for saving
       const resumeData = convertEditorResumeToResumeData(currentResume);
       console.log('🔄 Converted resume data:', resumeData);
-      
+
       const resumeId = await saveResume(resumeData, currentResume.title);
       console.log('✅ Save completed with ID:', resumeId);
-      
+
       setLastSaved(new Date());
       toast.success('Resume saved successfully');
-      
+
       // Update URL to include the resume ID if it's a new resume
       if (!params?.id && resumeId) {
         console.log('🔗 Updating URL with resume ID:', resumeId);

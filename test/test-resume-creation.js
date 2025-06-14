@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { getSampleResumeData } = require('./src/lib/sample-data');
+const { getSampleResumeData } = require('../src/lib/sample-data');
 
 async function testResumeCreation() {
   const prisma = new PrismaClient();
