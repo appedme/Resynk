@@ -3,12 +3,12 @@ import { stackServerApp } from '@/stack';
 import { UserService } from '@/lib/db/user-service';
 import type { StackAuthUser, AuthenticatedHandler } from '@/types/auth';
 
-export async function withAuth(handler: AuthenticatedHandler) {
+export function withAuth(handler: AuthenticatedHandler) {
   return async (request: NextRequest) => {
     try {
-      // Get the authenticated user from StackAuth
-      const user = await stackServerApp.getUser();
-      
+      // Get the authenticated user from StackAuth with request context
+      const user = await stackServerApp.getUser({ request });
+
       if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }

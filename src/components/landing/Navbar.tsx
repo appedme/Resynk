@@ -11,7 +11,7 @@ export function Navbar() {
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
     const user = useUser();
-    
+
     // User state will reactively update when authentication changes
     const isLoggedIn = !!user;
 

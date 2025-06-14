@@ -17,7 +17,7 @@ export class ResumeService {
     const template = await prisma.template.findUnique({
       where: { id: data.templateId }
     });
-    
+
     if (!template) {
       throw new Error(`Template with ID ${data.templateId} not found`);
     }
@@ -95,9 +95,9 @@ export class ResumeService {
   static async updateResumeData(resumeId: string, resumeData: any) {
     await prisma.resume.update({
       where: { id: resumeId },
-      data: { 
+      data: {
         content: JSON.stringify(resumeData),
-        updatedAt: new Date() 
+        updatedAt: new Date()
       },
     });
   }
@@ -119,7 +119,7 @@ export class ResumeService {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
-    
+
     // Add timestamp to ensure uniqueness
     return `${baseSlug}-${Date.now()}`;
   }
@@ -161,7 +161,7 @@ function formatLastModified(date: Date): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     if (diffHours === 0) {

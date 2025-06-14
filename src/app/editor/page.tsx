@@ -17,7 +17,11 @@ import { ResumeEditorSidebar } from "@/components/editor/resume-editor-sidebar";
 import { ResumePreview } from "@/components/editor/resume-preview";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
 import { ExportOptions } from "@/components/editor/export-options-new";
+import { SaveLoadDialog } from "@/components/editor/save-load-dialog";
 import { getSampleResumeData } from "@/lib/sample-data";
+import { useSaveLoad } from "@/hooks/use-save-load";
+import { convertEditorResumeToResumeData, convertResumeDataToEditorResume } from "@/lib/resume-converter";
+import type { ResumeData } from "@/types/resume";
 import { Toaster, toast } from "sonner";
 
 // Editor-specific Resume interface for simpler usage
@@ -124,8 +128,34 @@ export default function EditorPage({ params }: EditorPageProps) {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [zoom, setZoom] = useState(100);
   const [isFullPreview, setIsFullPreview] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Use the actual save/load service
+  const {
+    isLoading: isSaving,
+    saveResume,
+    loadResume,
+    autoSave,
+  } = useSaveLoad();
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (!currentResume) return;
+
+    const autoSaveTimer = setTimeout(async () => {
+      try {
+        console.log('🔄 Auto-saving resume...');
+        const resumeData = convertEditorResumeToResumeData(currentResume);
+        await autoSave(resumeData);
+        console.log('✅ Auto-save completed');
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error('❌ Auto-save failed:', error);
+      }
+    }, 5000); // Auto-save every 5 seconds
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [currentResume, autoSave]);
 
   // Undo/Redo functionality
   const [history, setHistory] = useState<Resume[]>([]);
@@ -135,12 +165,12 @@ export default function EditorPage({ params }: EditorPageProps) {
   useEffect(() => {
     const initializeResume = async () => {
       if (params?.id) {
-        // Load existing resume by ID from database
+        // Load existing resume by ID from save/load service
         try {
-          const response = await fetch(`/api/resumes/${params.id}`);
-          if (response.ok) {
-            const data = await response.json();
-            setCurrentResume(data.resume);
+          const resumeData = await loadResume(params.id);
+          if (resumeData) {
+            const editorResume = convertResumeDataToEditorResume(resumeData, params.id);
+            setCurrentResume(editorResume);
             toast.success('Resume loaded successfully');
           } else {
             console.error('Failed to load resume');
@@ -202,20 +232,45 @@ export default function EditorPage({ params }: EditorPageProps) {
     };
 
     initializeResume();
-  }, [params?.id]);
+  }, [params?.id, loadResume]);
 
   const handleSave = async () => {
     if (!currentResume) return;
 
-    setIsSaving(true);
     try {
-      // Mock save function - would integrate with actual API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('💾 Starting save process...', currentResume.title);
+      
+      // Convert editor resume to ResumeData format for saving
+      const resumeData = convertEditorResumeToResumeData(currentResume);
+      console.log('🔄 Converted resume data:', resumeData);
+      
+      const resumeId = await saveResume(resumeData, currentResume.title);
+      console.log('✅ Save completed with ID:', resumeId);
+      
       setLastSaved(new Date());
+      toast.success('Resume saved successfully');
+      
+      // Update URL to include the resume ID if it's a new resume
+      if (!params?.id && resumeId) {
+        console.log('🔗 Updating URL with resume ID:', resumeId);
+        router.replace(`/editor/${resumeId}`);
+      }
     } catch (error) {
-      console.error('Failed to save resume:', error);
-    } finally {
-      setIsSaving(false);
+      console.error('❌ Failed to save resume:', error);
+      toast.error('Failed to save resume');
+    }
+  };
+
+  const handleLoadResume = (resumeData: ResumeData) => {
+    try {
+      console.log('📄 Loading resume data:', resumeData);
+      const editorResume = convertResumeDataToEditorResume(resumeData);
+      console.log('🔄 Converted to editor format:', editorResume);
+      setCurrentResume(editorResume);
+      toast.success('Resume loaded successfully');
+    } catch (error) {
+      console.error('❌ Error loading resume:', error);
+      toast.error('Failed to load resume');
     }
   };
 
@@ -463,6 +518,16 @@ export default function EditorPage({ params }: EditorPageProps) {
               <Save className="w-4 h-4 mr-1" />
               {isSaving ? 'Saving...' : 'Save'}
             </Button>
+            <SaveLoadDialog
+              currentResume={currentResume ? convertEditorResumeToResumeData(currentResume) : {} as ResumeData}
+              onLoad={handleLoadResume}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <Save className="w-4 h-4 mr-1" />
+                  Save / Load
+                </Button>
+              }
+            />
             <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="w-4 h-4 mr-1" />
               Share

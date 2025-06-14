@@ -139,20 +139,20 @@ export default function Dashboard() {
       router.push('/handler/sign-in');
       return;
     }
-    
+
     // Load user's resumes from database
     loadUserResumes();
   }, [user, router]);
 
   const loadUserResumes = async () => {
     if (!user) return;
-    
+
     console.log('📊 Loading resumes for user:', user.id);
-    
+
     try {
       const response = await fetch('/api/resumes');
       console.log('📡 API response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('📄 Resumes loaded:', data.resumes?.length || 0);
@@ -205,24 +205,24 @@ export default function Dashboard() {
   const filteredResumes = displayResumes
     .filter(resume => {
       const matchesSearch = resume.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          resume.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+        resume.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesStatus = filterStatus === "all" || resume.status === filterStatus;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
       let aValue: string | number = a[sortBy];
       let bValue: string | number = b[sortBy];
-      
+
       if (sortBy === "lastModified") {
         aValue = new Date(a.updatedAt).getTime();
         bValue = new Date(b.updatedAt).getTime();
       }
-      
+
       if (typeof aValue === "string") {
         aValue = aValue.toLowerCase();
         bValue = (bValue as string).toLowerCase();
       }
-      
+
       if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       } else {
@@ -232,7 +232,7 @@ export default function Dashboard() {
 
   // Handle resume actions
   const handleFavorite = (id: string) => {
-    setResumes(resumes.map(resume => 
+    setResumes(resumes.map(resume =>
       resume.id === id ? { ...resume, favorite: !resume.favorite } : resume
     ));
     const resume = displayResumes.find(r => r.id === id);
@@ -311,182 +311,302 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-16">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Dashboard
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">
-                Manage your professional resumes and track their performance
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <NewResumeDialog onResumeCreated={loadUserResumes} />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Dashboard
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
+                  Manage your professional resumes and track their performance
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <NewResumeDialog onResumeCreated={loadUserResumes} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Resumes</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalResumes}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="inline w-3 h-3 mr-1" />
-                +2 this month
-              </p>
-            </CardContent>
-          </Card>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Resumes</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalResumes}</div>
+                <p className="text-xs text-muted-foreground">
+                  <TrendingUp className="inline w-3 h-3 mr-1" />
+                  +2 this month
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg ATS Score</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.avgAtsScore}%</div>
-              <Progress value={stats.avgAtsScore} className="mt-2" />
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg ATS Score</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgAtsScore}%</div>
+                <Progress value={stats.avgAtsScore} className="mt-2" />
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalViews}</div>
-              <p className="text-xs text-muted-foreground">
-                +12 this week
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+                <Eye className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalViews}</div>
+                <p className="text-xs text-muted-foreground">
+                  +12 this week
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Downloads</CardTitle>
-              <Download className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalDownloads}</div>
-              <p className="text-xs text-muted-foreground">
-                +5 this week
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Downloads</CardTitle>
+                <Download className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalDownloads}</div>
+                <p className="text-xs text-muted-foreground">
+                  +5 this week
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Published</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeResumes}</div>
-              <p className="text-xs text-muted-foreground">
-                Currently active
-              </p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Published</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.activeResumes}</div>
+                <p className="text-xs text-muted-foreground">
+                  Currently active
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.recentActivity}</div>
-              <p className="text-xs text-muted-foreground">
-                Past 7 days
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search resumes by title or tags..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.recentActivity}</div>
+                <p className="text-xs text-muted-foreground">
+                  Past 7 days
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Filters */}
-          <div className="flex gap-2">
-            <Select value={filterStatus} onValueChange={(value: "all" | "draft" | "published" | "archived") => setFilterStatus(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Filters and Search */}
+          <div className="flex flex-col lg:flex-row gap-4 mb-6">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search resumes by title or tags..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
 
-            <Select value={sortBy} onValueChange={(value: "lastModified" | "title" | "atsScore" | "views") => setSortBy(value)}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lastModified">Last Modified</SelectItem>
-                <SelectItem value="title">Title</SelectItem>
-                <SelectItem value="atsScore">ATS Score</SelectItem>
-                <SelectItem value="views">Views</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Filters */}
+            <div className="flex gap-2">
+              <Select value={filterStatus} onValueChange={(value: "all" | "draft" | "published" | "archived") => setFilterStatus(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-            >
-              {sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-            </Button>
+              <Select value={sortBy} onValueChange={(value: "lastModified" | "title" | "atsScore" | "views") => setSortBy(value)}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lastModified">Last Modified</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="atsScore">ATS Score</SelectItem>
+                  <SelectItem value="views">Views</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <div className="border-l pl-2 flex gap-1">
               <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
+                variant="outline"
                 size="icon"
-                onClick={() => setViewMode("grid")}
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
               >
-                <Grid className="w-4 h-4" />
+                {sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
               </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+
+              <div className="border-l pl-2 flex gap-1">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Resume Grid/List */}
-        {filteredResumes.length > 0 ? (
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-            {filteredResumes.map((resume) => (
-              <Card key={resume.id} className={`group hover:shadow-lg transition-all duration-200 ${viewMode === "list" ? "flex" : ""}`}>
-                {viewMode === "grid" ? (
-                  <>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg truncate">{resume.title}</CardTitle>
+          {/* Resume Grid/List */}
+          {filteredResumes.length > 0 ? (
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+              {filteredResumes.map((resume) => (
+                <Card key={resume.id} className={`group hover:shadow-lg transition-all duration-200 ${viewMode === "list" ? "flex" : ""}`}>
+                  {viewMode === "grid" ? (
+                    <>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-lg truncate">{resume.title}</CardTitle>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleFavorite(resume.id)}
+                                className="p-1 h-auto"
+                              >
+                                <Star className={`w-4 h-4 ${resume.favorite ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
+                              </Button>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                              {resume.template.charAt(0).toUpperCase() + resume.template.slice(1)} Template
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {resume.tags.slice(0, 3).map((tag) => (
+                                <Badge key={tag} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {resume.tags.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{resume.tags.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/editor/${resume.id}`}>
+                                  <Edit3 className="w-4 h-4 mr-2" />
+                                  Edit
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDuplicate(resume.id)}>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Duplicate
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShare(resume.id)}>
+                                <Share2 className="w-4 h-4 mr-2" />
+                                Share
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDownload(resume.id)}>
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => handleDelete(resume.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {/* Resume Preview Placeholder */}
+                        <div className="bg-white dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg h-48 mb-4 flex items-center justify-center">
+                          <FileText className="w-12 h-12 text-gray-400" />
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Badge className={getStatusColor(resume.status)}>
+                              {resume.status}
+                            </Badge>
+                            <span className="text-sm text-gray-500">
+                              {resume.lastModified}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600 dark:text-gray-300">
+                                ATS Score:
+                              </span>
+                              <Badge className={getAtsScoreColor(resume.atsScore)}>
+                                {resume.atsScore}%
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Eye className="w-3 h-3" />
+                                {resume.views}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Download className="w-3 h-3" />
+                                {resume.downloads}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-2">
+                            <Link href={`/editor/${resume.id}`} className="flex-1">
+                              <Button variant="outline" className="w-full">
+                                <Edit3 className="w-4 h-4 mr-1" />
+                                Edit
+                              </Button>
+                            </Link>
+                            <Button variant="default" className="flex-1">
+                              <Eye className="w-4 h-4 mr-1" />
+                              Preview
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </>
+                  ) : (
+                    // List view
+                    <div className="flex items-center p-6 w-full">
+                      <div className="flex-1 grid grid-cols-1 lg:grid-cols-6 gap-4 items-center">
+                        <div className="lg:col-span-2">
+                          <div className="flex items-center gap-3">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -495,250 +615,130 @@ export default function Dashboard() {
                             >
                               <Star className={`w-4 h-4 ${resume.favorite ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
                             </Button>
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            {resume.template.charAt(0).toUpperCase() + resume.template.slice(1)} Template
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {resume.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                            {resume.tags.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{resume.tags.length - 3}
-                              </Badge>
-                            )}
+                            <div>
+                              <h3 className="font-semibold">{resume.title}</h3>
+                              <p className="text-sm text-gray-500">{resume.template} template</p>
+                            </div>
                           </div>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/editor/${resume.id}`}>
-                                <Edit3 className="w-4 h-4 mr-2" />
-                                Edit
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDuplicate(resume.id)}>
-                              <Copy className="w-4 h-4 mr-2" />
-                              Duplicate
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleShare(resume.id)}>
-                              <Share2 className="w-4 h-4 mr-2" />
-                              Share
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownload(resume.id)}>
-                              <Download className="w-4 h-4 mr-2" />
-                              Download
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="text-red-600"
-                              onClick={() => handleDelete(resume.id)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {/* Resume Preview Placeholder */}
-                      <div className="bg-white dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg h-48 mb-4 flex items-center justify-center">
-                        <FileText className="w-12 h-12 text-gray-400" />
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div>
                           <Badge className={getStatusColor(resume.status)}>
                             {resume.status}
                           </Badge>
-                          <span className="text-sm text-gray-500">
-                            {resume.lastModified}
+                        </div>
+                        <div>
+                          <Badge className={getAtsScoreColor(resume.atsScore)}>
+                            {resume.atsScore}%
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            {resume.views}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Download className="w-3 h-3" />
+                            {resume.downloads}
                           </span>
                         </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              ATS Score:
-                            </span>
-                            <Badge className={getAtsScoreColor(resume.atsScore)}>
-                              {resume.atsScore}%
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <Eye className="w-3 h-3" />
-                              {resume.views}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Download className="w-3 h-3" />
-                              {resume.downloads}
-                            </span>
-                          </div>
+                        <div className="text-sm text-gray-500">
+                          {resume.lastModified}
                         </div>
-
-                        <div className="flex gap-2 pt-2">
-                          <Link href={`/editor/${resume.id}`} className="flex-1">
-                            <Button variant="outline" className="w-full">
-                              <Edit3 className="w-4 h-4 mr-1" />
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/editor/${resume.id}`}>
+                              <Edit3 className="w-4 h-4 mr-2" />
                               Edit
-                            </Button>
-                          </Link>
-                          <Button variant="default" className="flex-1">
-                            <Eye className="w-4 h-4 mr-1" />
-                            Preview
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </>
-                ) : (
-                  // List view
-                  <div className="flex items-center p-6 w-full">
-                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-6 gap-4 items-center">
-                      <div className="lg:col-span-2">
-                        <div className="flex items-center gap-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleFavorite(resume.id)}
-                            className="p-1 h-auto"
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDuplicate(resume.id)}>
+                            <Copy className="w-4 h-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleShare(resume.id)}>
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDownload(resume.id)}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDelete(resume.id)}
                           >
-                            <Star className={`w-4 h-4 ${resume.favorite ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
-                          </Button>
-                          <div>
-                            <h3 className="font-semibold">{resume.title}</h3>
-                            <p className="text-sm text-gray-500">{resume.template} template</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <Badge className={getStatusColor(resume.status)}>
-                          {resume.status}
-                        </Badge>
-                      </div>
-                      <div>
-                        <Badge className={getAtsScoreColor(resume.atsScore)}>
-                          {resume.atsScore}%
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          {resume.views}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Download className="w-3 h-3" />
-                          {resume.downloads}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {resume.lastModified}
-                      </div>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/editor/${resume.id}`}>
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Edit
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicate(resume.id)}>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleShare(resume.id)}>
-                          <Share2 className="w-4 h-4 mr-2" />
-                          Share
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownload(resume.id)}>
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => handleDelete(resume.id)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-              </Card>
-            ))}
-          </div>
-        ) : (
-          // Empty State
-          <div className="text-center py-16">
-            {searchQuery || filterStatus !== "all" ? (
-              <>
-                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  No resumes found
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Try adjusting your search criteria or filters
-                </p>
-                <Button variant="outline" onClick={() => { setSearchQuery(""); setFilterStatus("all"); }}>
-                  Clear filters
-                </Button>
-              </>
-            ) : (
-              <>
-                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  No resumes yet
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Create your first resume to get started with Resynk
-                </p>
-                <Link href="/editor">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Your First Resume
+                  )}
+                </Card>
+              ))}
+            </div>
+          ) : (
+            // Empty State
+            <div className="text-center py-16">
+              {searchQuery || filterStatus !== "all" ? (
+                <>
+                  <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    No resumes found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    Try adjusting your search criteria or filters
+                  </p>
+                  <Button variant="outline" onClick={() => { setSearchQuery(""); setFilterStatus("all"); }}>
+                    Clear filters
                   </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        )}
+                </>
+              ) : (
+                <>
+                  <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    No resumes yet
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    Create your first resume to get started with Resynk
+                  </p>
+                  <Link href="/editor">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Your First Resume
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
 
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete your resume
-                and remove all associated data from our servers.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          {/* Delete Confirmation Dialog */}
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your resume
+                  and remove all associated data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </>

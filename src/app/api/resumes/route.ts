@@ -18,18 +18,23 @@ export const GET = withAuth(async (request: NextRequest, user: StackAuthUser, db
     return NextResponse.json({ success: true, resume });
   } else {
     // Get all resumes for current user
+    console.log('📊 Fetching resumes for user:', dbUser.id);
     const resumes = await ResumeService.getUserResumes(dbUser.id);
+    console.log('📄 Raw resumes from DB:', resumes.length);
 
     return NextResponse.json({
       success: true,
-      resumes: resumes.map(resume => ResumeService.convertToSimpleFormat(resume)),
+      resumes: resumes.map(resume => {
+        console.log('🔄 Converting resume:', resume.id);
+        return ResumeService.convertToSimpleFormat(resume);
+      }),
     });
   }
 });
 
 export const POST = withAuth(async (request: NextRequest, user: StackAuthUser, dbUser: User) => {
   const body = await request.json();
-  
+
   // Type assertion for request body
   const requestData = body as {
     title?: string;
@@ -48,7 +53,7 @@ export const POST = withAuth(async (request: NextRequest, user: StackAuthUser, d
       userId: dbUser.id,
       userEmail: dbUser.email
     });
-    
+
     const resume = await ResumeService.createResume(dbUser.id, {
       title,
       templateId,
@@ -88,6 +93,6 @@ export const DELETE = withAuth(async (request: NextRequest, user: StackAuthUser,
 
   // Delete the resume
   await ResumeService.deleteResume(resumeId, dbUser.id);
-  
+
   return NextResponse.json({ success: true });
 });

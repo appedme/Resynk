@@ -5,25 +5,25 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     console.log('🔍 Testing database connection...');
-    
+
     // Test database connection
     const userCount = await prisma.user.count();
     const resumeCount = await prisma.resume.count();
     const templateCount = await prisma.template.count();
-    
+
     console.log('📊 Database counts:', { userCount, resumeCount, templateCount });
-    
+
     // Get some sample data
     const recentUsers = await prisma.user.findMany({
       take: 3,
       orderBy: { createdAt: 'desc' },
       select: { id: true, email: true, name: true, createdAt: true }
     });
-    
+
     const templates = await prisma.template.findMany({
       select: { id: true, name: true, category: true }
     });
-    
+
     return NextResponse.json({
       success: true,
       data: {
