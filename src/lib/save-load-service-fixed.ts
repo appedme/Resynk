@@ -61,11 +61,19 @@ class SaveLoadService {
 
     // Save a resume (API with localStorage fallback)
     static async saveResume(resumeData: any, title?: string, isAutoSave: boolean = false): Promise<string> {
-        const payload = {
+        // If resumeData already has title and templateId, use them directly
+        // Otherwise, wrap with default values
+        const payload = resumeData.title && resumeData.templateId ? {
+            ...resumeData,
+            isAutoSave,
+        } : {
             ...resumeData,
             title: title || `Resume ${new Date().toLocaleDateString()}`,
+            templateId: resumeData.templateId || 'modern', // Ensure templateId is present
             isAutoSave,
         };
+
+        console.log('💾 SaveLoadService payload:', payload);
 
         try {
             const result = await this.apiCall(this.API_BASE, {
@@ -73,14 +81,16 @@ class SaveLoadService {
                 body: JSON.stringify(payload),
             });
 
+            console.log('✅ API save result:', result);
+
             // Also save to localStorage as backup
             this.saveResumeToStorage(payload, title, isAutoSave);
 
             if (!isAutoSave) {
-                this.setCurrentResumeId(result.id);
+                this.setCurrentResumeId(result.resume?.id || result.id);
             }
 
-            return result.id;
+            return result.resume?.id || result.id;
         } catch (error: any) {
             // Check if it's an authentication error
             if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {

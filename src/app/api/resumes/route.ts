@@ -83,6 +83,8 @@ export async function POST(request: NextRequest) {
     };
     const { title, templateId, content, id } = body;
 
+    console.log('📥 Resume API received:', { title, templateId, id, hasContent: !!content });
+
     if (id) {
       // Update existing resume
       await db
@@ -96,6 +98,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, id });
     } else if (title && templateId) {
       // Create new resume
+      console.log('📝 Creating new resume with:', { title, templateId, userId: dbUser[0].id });
+      
       const newResume = await db.insert(resumes).values({
         userId: dbUser[0].id,
         templateId,
@@ -103,11 +107,14 @@ export async function POST(request: NextRequest) {
         content: content ? JSON.stringify(content) : null,
       }).returning();
 
+      console.log('✅ Resume created:', newResume[0]);
+
       return NextResponse.json({ 
         success: true, 
         resume: { id: newResume[0].id, title, templateId } 
       });
     } else {
+      console.error('❌ Missing required fields. Received:', { title, templateId, id });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
   } catch (error) {

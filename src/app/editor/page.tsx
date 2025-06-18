@@ -277,7 +277,17 @@ export default function EditorPage({ params }: EditorPageProps) {
       const resumeData = convertEditorResumeToResumeData(currentResume);
       console.log('🔄 Converted resume data:', resumeData);
 
-      const resumeId = await saveResume(resumeData, currentResume.title);
+      // Create payload with required API fields
+      const savePayload = {
+        ...resumeData,
+        title: currentResume.title,
+        templateId: currentResume.template || 'modern', // Default to 'modern' if not set
+        id: currentResume.id !== 'new' ? currentResume.id : undefined, // Only include id if it's not 'new'
+      };
+
+      console.log('📤 Save payload:', savePayload);
+
+      const resumeId = await saveResume(savePayload, currentResume.title);
       console.log('✅ Save completed with ID:', resumeId);
 
       // Update the current resume with the saved ID to ensure consistency
