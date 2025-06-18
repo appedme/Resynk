@@ -1,98 +1,112 @@
-// API routes for resume management with StackAuth integration
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth-middleware';
-import { ResumeService } from '@/lib/db/resume-service';
-import type { StackAuthUser } from '@/types/auth';
-import type { User } from '@prisma/client';
+import { db, resumes, users } from '@/lib/db';
+import { eq, and } from 'drizzle-orm';
+import { stackServerApp } from '@/stack';
 
-export const GET = withAuth(async (request: NextRequest, user: StackAuthUser, dbUser: User) => {
-  const { searchParams } = new URL(request.url);
-  const resumeId = searchParams.get('id');
-
-  if (resumeId) {
-    // Get specific resume
-    const resume = await ResumeService.getCompleteResume(resumeId, dbUser.id);
-    if (!resume) {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+export async function GET(request: NextRequest) {
+  try {
+    // Check authentication
+    const user = await stackServerApp.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    return NextResponse.json({ success: true, resume });
-  } else {
-    // Get all resumes for current user
-    console.log('📊 Fetching resumes for user:', dbUser.id);
-    const resumes = await ResumeService.getUserResumes(dbUser.id);
-    console.log('📄 Raw resumes from DB:', resumes.length);
 
-    return NextResponse.json({
-      success: true,
-      resumes: resumes.map(resume => {
-        console.log('🔄 Converting resume:', resume.id);
-        return ResumeService.convertToSimpleFormat(resume);
-      }),
-    });
+    // Find user in database
+    const dbUser = await db.select().from(users).where(eq(users.stackId, user.id)).limit(1);
+    if (dbUser.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const resumeId = searchParams.get('id');
+
+    if (resumeId) {
+      // Get specific resume
+      const resume = await db
+        .select()
+        .from(resumes)
+        .where(and(eq(resumes.id, resumeId), eq(resumes.userId, dbUser[0].id)))
+        .limit(1);
+
+      if (resume.length === 0) {
+        return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, resume: resume[0] });
+    } else {
+      // Get all resumes for user
+      const userResumes = await db
+        .select()
+        .from(resumes)
+        .where(eq(resumes.userId, dbUser[0].id));
+
+      return NextResponse.json({ success: true, resumes: userResumes });
+    }
+  } catch (error) {
+    console.error('Error in GET /api/resumes:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}
 
-export const POST = withAuth(async (request: NextRequest, user: StackAuthUser, dbUser: User) => {
-  const body = await request.json();
+export async function POST(request: NextRequest) {
+  try {
+    // Check authentication
+    const user = await stackServerApp.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  // Type assertion for request body
-  const requestData = body as {
-    title?: string;
-    templateId?: string;
-    data?: Record<string, unknown>;
-    id?: string;
-  };
+    // Find or create user in database
+    let dbUser = await db.select().from(users).where(eq(users.stackId, user.id)).limit(1);
+    
+    if (dbUser.length === 0) {
+      // Create user
+      const newUser = await db.insert(users).values({
+        stackId: user.id,
+        email: user.primaryEmail || '',
+        name: user.displayName || 'Anonymous',
+        avatar: user.profileImageUrl,
+      }).returning();
+      dbUser = newUser;
+    }
 
-  const { title, templateId, data, id } = requestData;
+    const body = await request.json() as {
+      title?: string;
+      templateId?: string;
+      content?: unknown;
+      id?: string;
+    };
+    const { title, templateId, content, id } = body;
 
-  if (title && templateId) {
-    // Create new resume
-    console.log('📝 Creating new resume:', {
-      title,
-      templateId,
-      userId: dbUser.id,
-      userEmail: dbUser.email
-    });
+    if (id) {
+      // Update existing resume
+      await db
+        .update(resumes)
+        .set({ 
+          content: JSON.stringify(content),
+          updatedAt: new Date()
+        })
+        .where(and(eq(resumes.id, id), eq(resumes.userId, dbUser[0].id)));
 
-    const resume = await ResumeService.createResume(dbUser.id, {
-      title,
-      templateId,
-      resumeData: data,
-    });
+      return NextResponse.json({ success: true, id });
+    } else if (title && templateId) {
+      // Create new resume
+      const newResume = await db.insert(resumes).values({
+        userId: dbUser[0].id,
+        templateId,
+        title,
+        content: content ? JSON.stringify(content) : null,
+      }).returning();
 
-    console.log('✅ Resume created successfully:', {
-      id: resume.id,
-      title: resume.title,
-      template: resume.template.name
-    });
-
-    return NextResponse.json({
-      success: true,
-      resume: {
-        id: resume.id,
-        title: resume.title,
-        templateId: resume.templateId,
-      },
-    });
-  } else if (id && data) {
-    // Update existing resume data
-    await ResumeService.updateResumeData(id, data);
-    return NextResponse.json({ success: true, id });
-  } else {
-    return NextResponse.json({ error: 'Invalid request data' }, { status: 400 });
+      return NextResponse.json({ 
+        success: true, 
+        resume: { id: newResume[0].id, title, templateId } 
+      });
+    } else {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+  } catch (error) {
+    console.error('Error in POST /api/resumes:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
-
-export const DELETE = withAuth(async (request: NextRequest, user: StackAuthUser, dbUser: User) => {
-  const { searchParams } = new URL(request.url);
-  const resumeId = searchParams.get('id');
-
-  if (!resumeId) {
-    return NextResponse.json({ error: 'Resume ID required' }, { status: 400 });
-  }
-
-  // Delete the resume
-  await ResumeService.deleteResume(resumeId, dbUser.id);
-
-  return NextResponse.json({ success: true });
-});
+}

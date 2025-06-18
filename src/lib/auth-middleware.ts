@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stackServerApp } from '@/stack';
 import { UserService } from '@/lib/db/user-service';
-import type { StackAuthUser, AuthenticatedHandler } from '@/types/auth';
+import type { User } from '@/lib/db';
+
+export interface StackAuthUser {
+  id: string;
+  primaryEmail: string | null;
+  displayName: string | null;
+  profileImageUrl: string | null;
+}
+
+export type AuthenticatedHandler = (
+  request: NextRequest,
+  stackUser: StackAuthUser,
+  dbUser: User
+) => Promise<NextResponse>;
 
 export function withAuth(handler: AuthenticatedHandler) {
   return async (request: NextRequest) => {
     try {
       // Get the authenticated user from StackAuth with request context
-      const user = await stackServerApp.getUser({ request });
+      const user = await stackServerApp.getUser();
 
       if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

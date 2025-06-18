@@ -1,4 +1,4 @@
-import type { User } from '@prisma/client';
+import type { User } from '@/lib/db';
 import type { NextRequest, NextResponse } from 'next/server';
 
 export interface StackAuthUser {

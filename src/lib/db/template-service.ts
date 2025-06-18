@@ -1,11 +1,12 @@
-import { prisma } from '../prisma';
+import { eq } from 'drizzle-orm';
+import { db, templates, type Template, type NewTemplate } from './index';
 
 export class TemplateService {
   /**
    * Seed default templates
    */
   static async seedDefaultTemplates() {
-    const templates = [
+    const defaultTemplates: NewTemplate[] = [
       {
         id: 'modern',
         name: 'Modern',
@@ -32,31 +33,41 @@ export class TemplateService {
       },
     ];
 
-    for (const template of templates) {
-      await prisma.template.upsert({
-        where: { id: template.id },
-        update: template,
-        create: template,
-      });
+    for (const template of defaultTemplates) {
+      // Check if template already exists
+      const existing = await db
+        .select()
+        .from(templates)
+        .where(eq(templates.id, template.id))
+        .limit(1);
+
+      if (existing.length === 0) {
+        await db.insert(templates).values(template);
+      }
     }
   }
 
   /**
    * Get all public templates
    */
-  static async getPublicTemplates() {
-    return await prisma.template.findMany({
-      where: { isPublic: true },
-      orderBy: { name: 'asc' },
-    });
+  static async getPublicTemplates(): Promise<Template[]> {
+    return await db
+      .select()
+      .from(templates)
+      .where(eq(templates.isPublic, true))
+      .orderBy(templates.name);
   }
 
   /**
    * Get template by ID
    */
-  static async getTemplateById(id: string) {
-    return await prisma.template.findUnique({
-      where: { id },
-    });
+  static async getTemplateById(id: string): Promise<Template | null> {
+    const result = await db
+      .select()
+      .from(templates)
+      .where(eq(templates.id, id))
+      .limit(1);
+
+    return result[0] || null;
   }
 }

@@ -1,39 +1,53 @@
 // Simple test to check database operations
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db, users, resumes, templates } from '@/lib/db';
+import { count, desc } from 'drizzle-orm';
 
 export async function GET() {
   try {
     console.log('🔍 Testing database connection...');
 
-    // Test database connection
-    const userCount = await prisma.user.count();
-    const resumeCount = await prisma.resume.count();
-    const templateCount = await prisma.template.count();
+    // Test database connection by counting records
+    const [userCount] = await db.select({ count: count() }).from(users);
+    const [resumeCount] = await db.select({ count: count() }).from(resumes);
+    const [templateCount] = await db.select({ count: count() }).from(templates);
 
-    console.log('📊 Database counts:', { userCount, resumeCount, templateCount });
+    console.log('📊 Database counts:', { 
+      users: userCount.count, 
+      resumes: resumeCount.count, 
+      templates: templateCount.count 
+    });
 
     // Get some sample data
-    const recentUsers = await prisma.user.findMany({
-      take: 3,
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, email: true, name: true, createdAt: true }
-    });
+    const recentUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        createdAt: users.createdAt
+      })
+      .from(users)
+      .orderBy(desc(users.createdAt))
+      .limit(3);
 
-    const templates = await prisma.template.findMany({
-      select: { id: true, name: true, category: true }
-    });
+    const allTemplates = await db
+      .select({
+        id: templates.id,
+        name: templates.name,
+        category: templates.category
+      })
+      .from(templates);
 
     return NextResponse.json({
       success: true,
       data: {
         counts: {
-          users: userCount,
-          resumes: resumeCount,
-          templates: templateCount
+          users: userCount.count,
+          resumes: resumeCount.count,
+          templates: templateCount.count
         },
         recentUsers,
-        templates,
+        templates: allTemplates,
         timestamp: new Date().toISOString()
       }
     });

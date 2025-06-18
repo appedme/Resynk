@@ -11,3 +11,12 @@ cover letter builder
 Rightbar on editor for editing the selected content
 
 create tests and docs in there respective folders
+
+
+In future
+Add
+- Cover Letter Builder
+- Rightbar on editor for editing the selected content
+- Create tests and docs in their respective folders
+- Pitch Deck Builder
+- 

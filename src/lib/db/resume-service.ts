@@ -1,5 +1,6 @@
-import { prisma } from '../prisma';
-import { getSampleResumeData } from '../sample-data';
+import { eq, desc } from 'drizzle-orm';
+import { db, resumes, templates, users, type Resume, type NewResume } from './index';
+import { getSampleResumeData } from '@/lib/sample-data';
 
 export class ResumeService {
   /**
@@ -12,13 +13,15 @@ export class ResumeService {
       templateId: string;
       resumeData?: any;
     }
-  ) {
-    // First verify the template exists
-    const template = await prisma.template.findUnique({
-      where: { id: data.templateId }
-    });
+  ): Promise<Resume & { template: any }> {
+    // Verify template exists
+    const template = await db
+      .select()
+      .from(templates)
+      .where(eq(templates.id, data.templateId))
+      .limit(1);
 
-    if (!template) {
+    if (template.length === 0) {
       throw new Error(`Template with ID ${data.templateId} not found`);
     }
 
@@ -26,58 +29,97 @@ export class ResumeService {
     const sampleData = getSampleResumeData();
     const resumeData = data.resumeData || sampleData;
 
-    // Create the resume with content
-    const resume = await prisma.resume.create({
-      data: {
+    // Create the resume
+    const [newResume] = await db
+      .insert(resumes)
+      .values({
         title: data.title,
         templateId: data.templateId,
         userId,
         slug: this.generateSlug(data.title),
         content: JSON.stringify(resumeData),
-      },
-      include: {
-        template: true,
-      },
-    });
+      })
+      .returning();
 
-    return resume;
+    return {
+      ...newResume,
+      template: template[0],
+    };
   }
 
   /**
    * Get user's resumes
    */
   static async getUserResumes(userId: string) {
-    return await prisma.resume.findMany({
-      where: { userId },
-      include: {
-        template: true,
+    const userResumes = await db
+      .select({
+        id: resumes.id,
+        userId: resumes.userId,
+        title: resumes.title,
+        slug: resumes.slug,
+        content: resumes.content,
+        isPublic: resumes.isPublic,
+        isPublished: resumes.isPublished,
+        createdAt: resumes.createdAt,
+        updatedAt: resumes.updatedAt,
+        templateId: templates.id,
+        templateName: templates.name,
+        templateDescription: templates.description,
+        templateCategory: templates.category,
+      })
+      .from(resumes)
+      .leftJoin(templates, eq(resumes.templateId, templates.id))
+      .where(eq(resumes.userId, userId))
+      .orderBy(desc(resumes.updatedAt));
+
+    return userResumes.map(resume => ({
+      ...resume,
+      template: {
+        id: resume.templateId,
+        name: resume.templateName,
+        description: resume.templateDescription,
+        category: resume.templateCategory,
       },
-      orderBy: { updatedAt: 'desc' },
-    });
+    }));
   }
 
   /**
-   * Get a complete resume by ID (with all sections)
+   * Get a complete resume by ID
    */
   static async getCompleteResume(resumeId: string, userId?: string) {
-    const whereClause: { id: string; userId?: string } = { id: resumeId };
+    const query = db
+      .select({
+        id: resumes.id,
+        userId: resumes.userId,
+        title: resumes.title,
+        slug: resumes.slug,
+        content: resumes.content,
+        isPublic: resumes.isPublic,
+        isPublished: resumes.isPublished,
+        createdAt: resumes.createdAt,
+        updatedAt: resumes.updatedAt,
+        templateId: templates.id,
+        templateName: templates.name,
+        templateDescription: templates.description,
+        templateCategory: templates.category,
+      })
+      .from(resumes)
+      .leftJoin(templates, eq(resumes.templateId, templates.id))
+      .where(eq(resumes.id, resumeId));
+
     if (userId) {
-      whereClause.userId = userId;
+      query.where(eq(resumes.userId, userId));
     }
 
-    const resume = await prisma.resume.findUnique({
-      where: whereClause,
-      include: {
-        template: true,
-      },
-    });
+    const result = await query.limit(1);
+    if (result.length === 0) return null;
 
-    if (!resume) return null;
+    const resume = result[0];
 
     // Parse the JSON content
     let parsedContent = null;
     try {
-      parsedContent = resume.content ? JSON.parse(resume.content as string) : null;
+      parsedContent = resume.content ? JSON.parse(resume.content) : null;
     } catch (error) {
       console.error('Error parsing resume content:', error);
       parsedContent = getSampleResumeData(); // Fallback to sample data
@@ -85,6 +127,12 @@ export class ResumeService {
 
     return {
       ...resume,
+      template: {
+        id: resume.templateId,
+        name: resume.templateName,
+        description: resume.templateDescription,
+        category: resume.templateCategory,
+      },
       data: parsedContent,
     };
   }
@@ -93,87 +141,44 @@ export class ResumeService {
    * Update resume data
    */
   static async updateResumeData(resumeId: string, resumeData: any) {
-    await prisma.resume.update({
-      where: { id: resumeId },
-      data: {
+    await db
+      .update(resumes)
+      .set({
         content: JSON.stringify(resumeData),
-        updatedAt: new Date()
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(resumes.id, resumeId));
   }
 
   /**
    * Delete a resume
    */
   static async deleteResume(resumeId: string, userId: string) {
-    return await prisma.resume.delete({
-      where: { id: resumeId, userId },
-    });
+    await db
+      .delete(resumes)
+      .where(eq(resumes.id, resumeId) && eq(resumes.userId, userId));
   }
 
   /**
-   * Generate a unique slug for a resume
+   * Generate a URL-friendly slug from title
    */
   private static generateSlug(title: string): string {
-    const baseSlug = title
+    return title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    // Add timestamp to ensure uniqueness
-    return `${baseSlug}-${Date.now()}`;
+      .replace(/(^-|-$)/g, '');
   }
 
   /**
-   * Get public resume by slug
-   */
-  static async getPublicResume(slug: string) {
-    return await prisma.resume.findUnique({
-      where: { slug, isPublic: true },
-      include: {
-        template: true,
-      },
-    });
-  }
-
-  /**
-   * Convert database resume to dashboard format
+   * Convert resume to simple format for API responses
    */
   static convertToSimpleFormat(resume: any) {
     return {
       id: resume.id,
       title: resume.title,
-      template: resume.template?.name?.toLowerCase() || 'modern',
-      lastModified: formatLastModified(resume.updatedAt),
-      status: resume.isPublished ? 'published' : 'draft',
-      atsScore: 85, // TODO: Calculate actual ATS score
-      views: 0, // TODO: Track views
-      downloads: 0, // TODO: Track downloads
-      favorite: false, // TODO: Add favorite field to schema
-      createdAt: resume.createdAt.toISOString().split('T')[0],
-      updatedAt: resume.updatedAt.toISOString().split('T')[0],
-      tags: [], // TODO: Extract tags from resume content
+      template: resume.template,
+      lastModified: resume.updatedAt,
+      isAutoSave: false, // We'll add this logic later if needed
     };
-  }
-}
-
-function formatLastModified(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    if (diffHours === 0) {
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      return diffMinutes < 1 ? 'Just now' : `${diffMinutes} minutes ago`;
-    }
-    return `${diffHours} hours ago`;
-  } else if (diffDays === 1) {
-    return 'Yesterday';
-  } else if (diffDays < 7) {
-    return `${diffDays} days ago`;
-  } else {
-    return date.toLocaleDateString();
   }
 }
