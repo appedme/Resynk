@@ -136,6 +136,7 @@ export default function EditorPage({ params }: EditorPageProps) {
     saveResume,
     loadResume,
     autoSave,
+    loadCurrentResume,
   } = useSaveLoad();
 
   // Auto-save functionality
@@ -146,8 +147,14 @@ export default function EditorPage({ params }: EditorPageProps) {
       try {
         console.log('🔄 Auto-saving resume...');
         const resumeData = convertEditorResumeToResumeData(currentResume);
-        await autoSave(resumeData);
-        console.log('✅ Auto-save completed');
+        const savedId = await autoSave(resumeData);
+        console.log('✅ Auto-save completed with ID:', savedId);
+        
+        // Update the current resume ID if it changed during auto-save
+        if (savedId && currentResume.id !== savedId) {
+          setCurrentResume(prev => prev ? { ...prev, id: savedId } : null);
+        }
+        
         setLastSaved(new Date());
       } catch (error) {
         console.error('❌ Auto-save failed:', error);
@@ -167,25 +174,48 @@ export default function EditorPage({ params }: EditorPageProps) {
       if (params?.id) {
         // Load existing resume by ID from save/load service
         try {
+          console.log('📥 Loading resume with ID:', params.id);
           const resumeData = await loadResume(params.id);
           if (resumeData) {
             const editorResume = convertResumeDataToEditorResume(resumeData, params.id);
             setCurrentResume(editorResume);
+            console.log('✅ Resume loaded successfully:', editorResume.title);
             toast.success('Resume loaded successfully');
           } else {
-            console.error('Failed to load resume');
-            toast.error('Failed to load resume');
+            console.error('❌ Failed to load resume - resume not found');
+            toast.error('Resume not found. Creating new resume.');
             // Fallback to new resume
             createNewResume();
           }
         } catch (error) {
-          console.error('Error loading resume:', error);
-          toast.error('Error loading resume');
+          console.error('❌ Error loading resume:', error);
+          toast.error('Error loading resume. Creating new resume.');
           createNewResume();
         }
       } else {
-        // Create new resume
-        createNewResume();
+        // Try to load the current resume (last edited) when no ID is provided
+        try {
+          console.log('🔍 Checking for current resume...');
+          const currentResumeData = await loadCurrentResume();
+          if (currentResumeData) {
+            const editorResume = convertResumeDataToEditorResume(currentResumeData);
+            setCurrentResume(editorResume);
+            console.log('✅ Loaded current resume:', editorResume.title);
+            toast.success(`Continued editing: ${editorResume.title}`);
+            
+            // Update URL to reflect the current resume
+            if (editorResume.id) {
+              window.history.replaceState(null, '', `/editor/${editorResume.id}`);
+            }
+          } else {
+            console.log('🆕 No current resume found, creating new resume');
+            createNewResume();
+          }
+        } catch (error) {
+          console.error('❌ Error loading current resume:', error);
+          console.log('🆕 Creating new resume as fallback');
+          createNewResume();
+        }
       }
     };
 
@@ -232,7 +262,7 @@ export default function EditorPage({ params }: EditorPageProps) {
     };
 
     initializeResume();
-  }, [params?.id, loadResume]);
+  }, [params?.id, loadResume, loadCurrentResume]);
 
   const handleSave = async () => {
     if (!currentResume) return;
@@ -247,13 +277,19 @@ export default function EditorPage({ params }: EditorPageProps) {
       const resumeId = await saveResume(resumeData, currentResume.title);
       console.log('✅ Save completed with ID:', resumeId);
 
+      // Update the current resume with the saved ID to ensure consistency
+      if (resumeId && currentResume.id !== resumeId) {
+        setCurrentResume(prev => prev ? { ...prev, id: resumeId } : null);
+      }
+
       setLastSaved(new Date());
       toast.success('Resume saved successfully');
 
-      // Update URL to include the resume ID if it's a new resume
-      if (!params?.id && resumeId) {
-        console.log('🔗 Updating URL with resume ID:', resumeId);
-        router.replace(`/editor/${resumeId}`);
+      // Only update URL quietly if it's a brand new resume (no existing params.id)
+      // This prevents unwanted navigation redirects when saving existing resumes
+      if (!params?.id && resumeId && window.history.replaceState) {
+        console.log('🔗 Quietly updating URL with resume ID:', resumeId);
+        window.history.replaceState(null, '', `/editor/${resumeId}`);
       }
     } catch (error) {
       console.error('❌ Failed to save resume:', error);

@@ -32,6 +32,9 @@ export function Navbar() {
                         <Link href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">
                             Features
                         </Link>
+                        <Link href="/ats-calculator" className="text-gray-600 hover:text-gray-900 transition-colors">
+                            ATS Scanner
+                        </Link>
                         <Link href="#templates" className="text-gray-600 hover:text-gray-900 transition-colors">
                             Templates
                         </Link>

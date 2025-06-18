@@ -32,6 +32,7 @@ class SaveLoadService {
 
         try {
             const resumes = this.getAllResumes();
+            // Use the existing ID if available, otherwise generate a new one
             const resumeId = resumeData.id || crypto.randomUUID();
 
             const savedResume: SavedResume = {
@@ -44,9 +45,13 @@ class SaveLoadService {
 
             const existingIndex = resumes.findIndex(r => r.id === resumeId);
             if (existingIndex >= 0) {
+                // Update existing resume
                 resumes[existingIndex] = savedResume;
+                console.log('📝 Updated existing resume:', resumeId);
             } else {
+                // Add new resume
                 resumes.push(savedResume);
+                console.log('🆕 Added new resume:', resumeId);
             }
 
             // Keep only last 50 resumes
@@ -56,9 +61,8 @@ class SaveLoadService {
 
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sortedResumes));
 
-            if (!isAutoSave) {
-                this.setCurrentResumeId(resumeId);
-            }
+            // Always update current resume ID when saving (not just for non-auto saves)
+            this.setCurrentResumeId(resumeId);
 
             return resumeId;
         } catch (error) {
