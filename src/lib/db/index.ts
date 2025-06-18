@@ -24,6 +24,6 @@ export function getDB() {
     return drizzleBetterSqlite(sqlite, { schema });
   }
 }
-w
+
 export const db = getDB();
 export * from './schema';
