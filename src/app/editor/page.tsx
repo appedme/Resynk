@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@stackframe/stack";
 import {
   Save,
   Share2,
   Settings,
-  Sparkles
+  Sparkles,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +21,7 @@ import { EditorToolbar } from "@/components/editor/editor-toolbar";
 import { ExportOptions } from "@/components/editor/export-options-new";
 import { SaveLoadDialog } from "@/components/editor/save-load-dialog";
 import { getSampleResumeData } from "@/lib/sample-data";
-import { useSaveLoad } from "@/hooks/use-save-load";
+import { useSaveLoad } from "@/lib/save-load-service-fixed";
 import { convertEditorResumeToResumeData, convertResumeDataToEditorResume } from "@/lib/resume-converter";
 import type { ResumeData } from "@/types/resume";
 import { Toaster, toast } from "sonner";
@@ -124,6 +126,7 @@ interface EditorPageProps {
 
 export default function EditorPage({ params }: EditorPageProps) {
   const router = useRouter();
+  const user = useUser();
   const [currentResume, setCurrentResume] = useState<Resume | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [zoom, setZoom] = useState(100);
@@ -283,7 +286,7 @@ export default function EditorPage({ params }: EditorPageProps) {
       }
 
       setLastSaved(new Date());
-      toast.success('Resume saved successfully');
+      toast.success('Resume saved successfully to database');
 
       // Only update URL quietly if it's a brand new resume (no existing params.id)
       // This prevents unwanted navigation redirects when saving existing resumes
@@ -293,6 +296,16 @@ export default function EditorPage({ params }: EditorPageProps) {
       }
     } catch (error) {
       console.error('❌ Failed to save resume:', error);
+      
+      // Check if it's an authentication error
+      if (error instanceof Error && error.message === 'AUTHENTICATION_REQUIRED') {
+        toast.error('Please sign in to save your resume to the database');
+        // Redirect to sign-in with return URL
+        router.push(`/handler/sign-in?redirect=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+      
+      toast.error('Failed to save resume. Please try again.');
       toast.error('Failed to save resume');
     }
   };
@@ -540,6 +553,31 @@ export default function EditorPage({ params }: EditorPageProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Authentication Status */}
+            {!user ? (
+              <div className="flex items-center gap-2 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
+                <User className="w-3 h-3 text-amber-600" />
+                <span className="text-xs text-amber-700 dark:text-amber-300">
+                  Sign in to save to database
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => router.push('/handler/sign-in')}
+                >
+                  Sign In
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+                <User className="w-3 h-3 text-green-600" />
+                <span className="text-xs text-green-700 dark:text-green-300">
+                  Signed in as {user.displayName || user.primaryEmail}
+                </span>
+              </div>
+            )}
+            
             {lastSaved && (
               <span className="text-xs text-gray-500">
                 Saved {lastSaved.toLocaleTimeString()}
@@ -550,9 +588,10 @@ export default function EditorPage({ params }: EditorPageProps) {
               size="sm"
               onClick={handleSave}
               disabled={isSaving}
+              className={!user ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
             >
               <Save className="w-4 h-4 mr-1" />
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? 'Saving...' : (!user ? 'Save Locally' : 'Save')}
             </Button>
             <SaveLoadDialog
               currentResume={currentResume ? convertEditorResumeToResumeData(currentResume) : {} as ResumeData}

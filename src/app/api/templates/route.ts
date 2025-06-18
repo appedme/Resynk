@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
-import { db, templates } from '@/lib/db';
+import { getDB } from '@/lib/db';
+import { templates } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
+    const db = getDB();
+    
     // Seed templates if they don't exist
     const existingTemplates = await db.select().from(templates);
     

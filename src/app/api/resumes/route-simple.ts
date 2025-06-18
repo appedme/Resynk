@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDB } from '@/lib/db';
-import { resumes, users } from '@/lib/db/schema';
+import { db, resumes, users } from '@/lib/db';
 import { eq, and } from 'drizzle-orm';
 import { stackServerApp } from '@/stack';
 
 export async function GET(request: NextRequest) {
   try {
-    const db = getDB();
-    
     // Check authentication
     const user = await stackServerApp.getUser();
     if (!user) {
@@ -53,8 +50,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const db = getDB();
-    
     // Check authentication
     const user = await stackServerApp.getUser();
     if (!user) {

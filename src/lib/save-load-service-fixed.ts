@@ -81,7 +81,16 @@ class SaveLoadService {
             }
 
             return result.id;
-        } catch {
+        } catch (error: any) {
+            // Check if it's an authentication error
+            if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+                // If not auto-save, throw the error to be handled by the UI
+                if (!isAutoSave) {
+                    throw new Error('AUTHENTICATION_REQUIRED');
+                }
+            }
+            
+            console.warn('API save failed, falling back to localStorage:', error);
             // Fallback to localStorage
             return this.saveResumeToStorage(payload, title, isAutoSave);
         }

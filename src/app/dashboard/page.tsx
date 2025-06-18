@@ -33,21 +33,27 @@ import Header from "@/components/header";
 import { useRouter } from "next/navigation";
 import { NewResumeDialog } from "@/components/editor/new-resume-dialog";
 
-// Types
+// Types  
 interface Resume {
   id: string;
   title: string;
-  template: 'modern' | 'professional' | 'creative';
-  lastModified: string;
-  status: 'draft' | 'published' | 'archived';
-  atsScore: number;
-  views: number;
-  downloads: number;
-  favorite: boolean;
+  template?: 'modern' | 'professional' | 'creative';
+  templateId?: string;
+  lastModified?: string;
+  status?: 'draft' | 'published' | 'archived';
+  atsScore?: number;
+  views?: number;
+  downloads?: number;
+  favorite?: boolean;
   createdAt: string;
   updatedAt: string;
   thumbnail?: string;
-  tags: string[];
+  tags?: string[];
+  // Database fields
+  content?: string;
+  isPublic?: boolean;
+  isPublished?: boolean;
+  userId?: string;
 }
 
 interface DashboardStats {
@@ -154,7 +160,7 @@ export default function Dashboard() {
       console.log('📡 API response status:', response.status);
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as { resumes?: Resume[] };
         console.log('📄 Resumes loaded:', data.resumes?.length || 0);
         setUserResumes(data.resumes || []);
       } else {
@@ -206,10 +212,10 @@ export default function Dashboard() {
   // Calculate dashboard stats
   const stats: DashboardStats = {
     totalResumes: displayResumes.length,
-    avgAtsScore: displayResumes.length > 0 ? Math.round(displayResumes.reduce((acc, resume) => acc + resume.atsScore, 0) / displayResumes.length) : 0,
-    totalViews: displayResumes.reduce((acc, resume) => acc + resume.views, 0),
-    totalDownloads: displayResumes.reduce((acc, resume) => acc + resume.downloads, 0),
-    activeResumes: displayResumes.filter(r => r.status === 'published').length,
+    avgAtsScore: displayResumes.length > 0 ? Math.round(displayResumes.reduce((acc, resume) => acc + (resume.atsScore || 0), 0) / displayResumes.length) : 0,
+    totalViews: displayResumes.reduce((acc, resume) => acc + (resume.views || 0), 0),
+    totalDownloads: displayResumes.reduce((acc, resume) => acc + (resume.downloads || 0), 0),
+    activeResumes: displayResumes.filter(r => (r.status || r.isPublished) === 'published' || r.isPublished).length,
     recentActivity: displayResumes.filter(r => {
       const lastModified = new Date(r.updatedAt);
       const today = new Date();
@@ -223,8 +229,8 @@ export default function Dashboard() {
   const filteredResumes = displayResumes
     .filter(resume => {
       const matchesSearch = resume.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        resume.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesStatus = filterStatus === "all" || resume.status === filterStatus;
+        (resume.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesStatus = filterStatus === "all" || (resume.status || 'draft') === filterStatus;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
@@ -515,17 +521,17 @@ export default function Dashboard() {
                               </Button>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                              {resume.template.charAt(0).toUpperCase() + resume.template.slice(1)} Template
+                              {(resume.templateId || resume.template || 'Unknown').charAt(0).toUpperCase() + (resume.templateId || resume.template || 'Unknown').slice(1)} Template
                             </p>
                             <div className="flex flex-wrap gap-1 mt-2">
-                              {resume.tags.slice(0, 3).map((tag) => (
+                              {(resume.tags || []).slice(0, 3).map((tag) => (
                                 <Badge key={tag} variant="outline" className="text-xs">
                                   {tag}
                                 </Badge>
                               ))}
-                              {resume.tags.length > 3 && (
+                              {(resume.tags || []).length > 3 && (
                                 <Badge variant="outline" className="text-xs">
-                                  +{resume.tags.length - 3}
+                                  +{(resume.tags || []).length - 3}
                                 </Badge>
                               )}
                             </div>
@@ -588,8 +594,8 @@ export default function Dashboard() {
                               <span className="text-sm text-gray-600 dark:text-gray-300">
                                 ATS Score:
                               </span>
-                              <Badge className={getAtsScoreColor(resume.atsScore)}>
-                                {resume.atsScore}%
+                              <Badge className={getAtsScoreColor(resume.atsScore || 0)}>
+                                {resume.atsScore || 0}%
                               </Badge>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-gray-500">
@@ -635,7 +641,7 @@ export default function Dashboard() {
                             </Button>
                             <div>
                               <h3 className="font-semibold">{resume.title}</h3>
-                              <p className="text-sm text-gray-500">{resume.template} template</p>
+                              <p className="text-sm text-gray-500">{resume.templateId || resume.template || 'unknown'} template</p>
                             </div>
                           </div>
                         </div>
@@ -645,8 +651,8 @@ export default function Dashboard() {
                           </Badge>
                         </div>
                         <div>
-                          <Badge className={getAtsScoreColor(resume.atsScore)}>
-                            {resume.atsScore}%
+                          <Badge className={getAtsScoreColor(resume.atsScore || 0)}>
+                            {resume.atsScore || 0}%
                           </Badge>
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-500">
