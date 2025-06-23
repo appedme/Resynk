@@ -8,13 +8,21 @@ import {
   Share2,
   Settings,
   Sparkles,
-  User
+  User,
+  MoreHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ResumeEditorSidebar } from "@/components/editor/resume-editor-sidebar";
 import { ResumePreview } from "@/components/editor/resume-preview";
 import { EditorToolbar } from "@/components/editor/editor-toolbar";
@@ -540,96 +548,159 @@ export default function EditorPage({ params }: EditorPageProps) {
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Top Toolbar */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/dashboard')}
-            >
-              ← Back to Dashboard
-            </Button>
-            <Separator orientation="vertical" className="h-6" />
-            <Input
-              value={currentResume.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              className="border-none text-lg font-semibold bg-transparent focus:bg-white dark:focus:bg-gray-700 w-64"
-              placeholder="Resume Title"
-            />
-            <Badge variant="outline" className="text-xs">
-              {currentResume.template} Template
-            </Badge>
-          </div>
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        {/* Main Header */}
+        <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            {/* Left Section - Navigation & Title */}
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/dashboard')}
+                className="flex-shrink-0"
+              >
+                ← Back to Dashboard
+              </Button>
+              <Separator orientation="vertical" className="h-6 flex-shrink-0" />
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <Input
+                  value={currentResume.title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  className="border-none text-lg font-semibold bg-transparent focus:bg-white dark:focus:bg-gray-700 min-w-0 max-w-sm"
+                  placeholder="Resume Title"
+                />
+                <Badge variant="outline" className="text-xs flex-shrink-0">
+                  {currentResume.template} Template
+                </Badge>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-2">
-            {/* Authentication Status */}
-            {!user ? (
-              <div className="flex items-center gap-2 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
-                <User className="w-3 h-3 text-amber-600" />
-                <span className="text-xs text-amber-700 dark:text-amber-300">
-                  Sign in to save to database
-                </span>
+            {/* Right Section - Status & Primary Actions */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Save Status */}
+              <div className="flex items-center gap-2">
+                {lastSaved && (
+                  <span className="text-xs text-gray-500 hidden sm:block">
+                    Saved {lastSaved.toLocaleTimeString()}
+                  </span>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={() => router.push('/handler/sign-in')}
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className={!user ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
                 >
-                  Sign In
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
-                <User className="w-3 h-3 text-green-600" />
-                <span className="text-xs text-green-700 dark:text-green-300">
-                  Signed in as {user.displayName || user.primaryEmail}
-                </span>
-              </div>
-            )}
-            
-            {lastSaved && (
-              <span className="text-xs text-gray-500">
-                Saved {lastSaved.toLocaleTimeString()}
-              </span>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-              className={!user ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
-            >
-              <Save className="w-4 h-4 mr-1" />
-              {isSaving ? 'Saving...' : (!user ? 'Save Locally' : 'Save')}
-            </Button>
-            <SaveLoadDialog
-              currentResume={currentResume ? convertEditorResumeToResumeData(currentResume) : {} as ResumeData}
-              onLoad={handleLoadResume}
-              trigger={
-                <Button variant="outline" size="sm">
                   <Save className="w-4 h-4 mr-1" />
-                  Save / Load
+                  {isSaving ? 'Saving...' : (!user ? 'Save Locally' : 'Save')}
                 </Button>
-              }
-            />
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="w-4 h-4 mr-1" />
-              Share
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrefillWithSampleData}
-              className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
-            >
-              <Sparkles className="w-4 h-4 mr-1" />
-              Prefill
-            </Button>
-            <ExportOptions resume={currentResume} />
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4" />
-            </Button>
+              </div>
+
+              {/* Authentication Status */}
+              {!user ? (
+                <div className="flex items-center gap-2 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
+                  <User className="w-3 h-3 text-amber-600" />
+                  <span className="text-xs text-amber-700 dark:text-amber-300 hidden md:block">
+                    Sign in to save to database
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => router.push('/handler/sign-in')}
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+                  <User className="w-3 h-3 text-green-600" />
+                  <span className="text-xs text-green-700 dark:text-green-300 hidden lg:block">
+                    {user.displayName || user.primaryEmail}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Toolbar - Tools & Actions */}
+        <div className="px-6 py-2 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between">
+            {/* Tool Groups */}
+            <div className="flex items-center gap-1">
+              {/* File Operations Group */}
+              <div className="flex items-center gap-1 pr-3 mr-3 border-r border-gray-200 dark:border-gray-600">
+                <SaveLoadDialog
+                  currentResume={currentResume ? convertEditorResumeToResumeData(currentResume) : {} as ResumeData}
+                  onLoad={handleLoadResume}
+                  trigger={
+                    <Button variant="ghost" size="sm" className="text-xs h-8">
+                      <Save className="w-3 h-3 mr-1" />
+                      <span className="hidden sm:inline">Load</span>
+                    </Button>
+                  }
+                />
+                <Button variant="ghost" size="sm" onClick={handleShare} className="text-xs h-8">
+                  <Share2 className="w-3 h-3 mr-1" />
+                  <span className="hidden sm:inline">Share</span>
+                </Button>
+                <div className="hidden sm:block">
+                  <ExportOptions resume={currentResume} />
+                </div>
+              </div>
+
+              {/* Content Tools Group */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handlePrefillWithSampleData}
+                  className="text-xs h-8 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-200 hover:from-purple-500/20 hover:to-pink-500/20"
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  <span className="hidden sm:inline">Prefill</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* View Options */}
+            <div className="flex items-center gap-1">
+              {/* Desktop Actions */}
+              <div className="hidden md:flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="text-xs">
+                  <Settings className="w-3 h-3" />
+                  <span className="hidden lg:inline ml-1">Settings</span>
+                </Button>
+              </div>
+
+              {/* Mobile Overflow Menu */}
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-xs">
+                      <MoreHorizontal className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={handleShare}>
+                      <Share2 className="w-3 h-3 mr-2" />
+                      Share Resume
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePrefillWithSampleData}>
+                      <Sparkles className="w-3 h-3 mr-2" />
+                      Prefill with Sample Data
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Settings className="w-3 h-3 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
           </div>
         </div>
       </div>

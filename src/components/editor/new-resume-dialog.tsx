@@ -12,13 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -128,11 +121,11 @@ export function NewResumeDialog({ onResumeCreated }: NewResumeDialogProps) {
           Create New Resume
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle>Create New Resume</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Resume Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Resume Title</Label>
@@ -141,6 +134,8 @@ export function NewResumeDialog({ onResumeCreated }: NewResumeDialogProps) {
               placeholder="e.g., Senior Frontend Developer Resume"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="text-base"
+              autoFocus
             />
           </div>
 
@@ -152,7 +147,7 @@ export function NewResumeDialog({ onResumeCreated }: NewResumeDialogProps) {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
                 {templates.map((template) => (
                   <Card 
                     key={template.id} 
@@ -163,20 +158,20 @@ export function NewResumeDialog({ onResumeCreated }: NewResumeDialogProps) {
                     }`}
                     onClick={() => setSelectedTemplate(template.id)}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-3">
                       <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-sm">{template.name}</h3>
-                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">{template.name}</h3>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                             {template.description}
                           </p>
-                          <span className="inline-block bg-gray-100 dark:bg-gray-800 text-xs px-2 py-1 rounded-full mt-2">
+                          <span className="inline-block bg-gray-100 dark:bg-gray-800 text-xs px-2 py-0.5 rounded-full mt-2">
                             {template.category}
                           </span>
                         </div>
                         {selectedTemplate === template.id && (
-                          <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                           </div>
                         )}
                       </div>
@@ -188,17 +183,19 @@ export function NewResumeDialog({ onResumeCreated }: NewResumeDialogProps) {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-2 border-t">
             <Button 
               variant="outline" 
               onClick={() => setOpen(false)}
               disabled={isCreating}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button 
               onClick={createResume}
               disabled={isCreating || !title.trim() || !selectedTemplate}
+              className="w-full sm:w-auto"
             >
               {isCreating ? 'Creating...' : 'Create Resume'}
             </Button>
