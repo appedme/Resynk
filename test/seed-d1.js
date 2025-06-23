@@ -1,6 +1,6 @@
 // Simple seeding script for D1 database
-import { getDB } from './src/lib/db/index.js';
-import { templates } from './src/lib/db/schema.js';
+import { getDB } from '../src/lib/db/index.js';
+import { templates } from '../src/lib/db/schema.js';
 
 async function seedDatabase() {
   console.log('🌱 Seeding database...');

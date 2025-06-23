@@ -13,7 +13,7 @@ async function testDrizzleSetup() {
     const [userCount] = await db.select({ count: count() }).from(users);
     const [resumeCount] = await db.select({ count: count() }).from(resumes);
     const [templateCount] = await db.select({ count: count() }).from(templates);
-    
+
     console.log(`   ✅ Users: ${userCount.count}`);
     console.log(`   ✅ Resumes: ${resumeCount.count}`);
     console.log(`   ✅ Templates: ${templateCount.count}`);
@@ -94,7 +94,7 @@ async function testDrizzleSetup() {
     const [finalUserCount] = await db.select({ count: count() }).from(users);
     const [finalResumeCount] = await db.select({ count: count() }).from(resumes);
     const [finalTemplateCount] = await db.select({ count: count() }).from(templates);
-    
+
     console.log(`   Users: ${finalUserCount.count}`);
     console.log(`   Resumes: ${finalResumeCount.count}`);
     console.log(`   Templates: ${finalTemplateCount.count}`);

@@ -4,7 +4,7 @@
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
-import { TemplateService } from './src/lib/db/template-service.js';
+import { TemplateService } from '../src/lib/db/template-service.js';
 
 async function setupDatabase() {
   console.log('🚀 Setting up Drizzle database...');
@@ -25,7 +25,7 @@ async function setupDatabase() {
     await TemplateService.seedDefaultTemplates();
 
     console.log('✅ Database setup completed successfully!');
-    
+
     // Test the connection
     console.log('🧪 Testing database operations...');
     const templates = await TemplateService.getPublicTemplates();
